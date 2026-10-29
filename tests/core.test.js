@@ -472,3 +472,24 @@ test('el historial conserva dificultad, precisión y duración y limita entradas
   assert.deepEqual(progress.history[0], { difficulty: 'facil', wpm: 6, accuracy: 90, duration: 60 });
   assert.deepEqual(sanitizeProgress({ history: [{ difficulty: 'invalid', wpm: 1, accuracy: 10, duration: 2 }] }).history, []);
 });
+
+test('la demo del título abate zombis y escala con la dificultad', async () => {
+  const { createDemo, updateDemo, setDemoMood } = await import('../js/core/demo.js');
+  const { updateView } = await import('../js/core/view.js');
+  updateView(1280, 720);
+  const demo = createDemo();
+  const normal = demo.zombies.length;
+  setDemoMood(demo, 'pesadilla');
+  assert.ok(demo.zombies.length > normal);
+
+  let fired = false;
+  for (let i = 0; i < 1200; i++) {
+    updateDemo(demo, 0.05);
+    if (demo.effects.tracers.length) fired = true;
+  }
+  assert.ok(fired, 'la heroína dispara sola');
+
+  const still = createDemo();
+  for (let i = 0; i < 600; i++) updateDemo(still, 0.05, { still: true });
+  assert.equal(still.effects.tracers.length + still.effects.particles.length, 0);
+});

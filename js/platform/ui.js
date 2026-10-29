@@ -144,8 +144,6 @@ export function createUI(actions) {
       control.addEventListener('input', () => actions.setOption(key, Number(control.value)));
       // Al soltar el control de efectos suena uno para oír el nuevo volumen.
       if (key === 'sfx') control.addEventListener('change', actions.previewSfx);
-    } else if (control.dataset.value) {
-      control.addEventListener('click', () => actions.setOption(key, control.dataset.value));
     } else {
       control.addEventListener('click', () => {
         actions.setOption(key, control.getAttribute('aria-pressed') !== 'true');
@@ -155,14 +153,26 @@ export function createUI(actions) {
 
   // Borrar el récord no se puede deshacer, así que pide un segundo clic.
   let resetArmed = false;
+  const resetName = el.resetRecord.querySelector('.item-name');
+  const resetStatus = $('#reset-status');
+  const describeReset = () => {
+    resetStatus.classList.toggle('armed', resetArmed);
+    resetStatus.textContent = resetArmed
+      ? 'Pulsa otra vez para borrarlo. Cualquier otra tecla cancela.'
+      : el.resetRecord.disabled
+        ? 'No hay nada que borrar.'
+        : 'Se borran el récord, el PPM máx. y las últimas partidas.';
+  };
   const disarmReset = () => {
     resetArmed = false;
-    el.resetRecord.textContent = 'Borrar récord y progreso';
+    resetName.textContent = 'Borrar récord y progreso';
+    describeReset();
   };
   el.resetRecord.addEventListener('click', () => {
     if (!resetArmed) {
       resetArmed = true;
-      el.resetRecord.textContent = '¿Seguro? Otra vez';
+      resetName.textContent = '¿Seguro? Otra vez';
+      describeReset();
       return;
     }
     disarmReset();
@@ -170,19 +180,29 @@ export function createUI(actions) {
     $('#options-back').focus();
   });
   el.resetRecord.addEventListener('blur', disarmReset);
+  el.resetRecord.addEventListener('keydown', (e) => {
+    if (resetArmed && e.key !== 'Enter' && e.key !== ' ') disarmReset();
+  });
+  describeReset();
 
   // Las listas de [data-menu] se recorren con las flechas, como en un menú de
   // consola, y el ratón mueve el foco para que solo haya un cursor visible.
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-    const menu = document.activeElement?.closest('[data-menu]');
+    // En Opciones las flechas recorren todas las filas; ←→ queda para los deslizadores.
+    const menu = document.activeElement?.closest('#screen-options') ?? document.activeElement?.closest('[data-menu]');
     if (!menu) return;
     e.preventDefault();
-    const items = [...menu.querySelectorAll('button:not(:disabled)')].filter((item) => item.getClientRects().length);
+    const items = [...menu.querySelectorAll('button:not(:disabled), input')].filter((item) => item.getClientRects().length);
     if (!items.length) return;
     const step = e.key === 'ArrowDown' ? 1 : -1;
     const i = items.indexOf(document.activeElement);
     items[(i + step + items.length) % items.length].focus();
+  });
+  // El título reacciona a la dificultad que tiene el cursor.
+  document.addEventListener('focusin', (e) => {
+    const diff = e.target.closest?.('[data-diff]')?.dataset.diff;
+    if (diff) actions.previewDifficulty(diff);
   });
   // Un cambio de pantalla bajo el ratón inmóvil no debe robar el foco de escritura.
   document.addEventListener('pointermove', (e) => {
@@ -378,6 +398,7 @@ export function createUI(actions) {
       el.bestWpm.textContent = progress.bestWpm;
       el.bestWpmWrap.classList.toggle('hidden', !progress.games);
       el.resetRecord.disabled = value === 0 && !progress.games;
+      describeReset();
     },
 
     // Refleja las opciones en sus controles y en lo que dependen de ellas.
@@ -388,8 +409,6 @@ export function createUI(actions) {
           control.value = value;
           control.setAttribute('aria-valuetext', `${value} de ${control.max}`);
           $(`#${control.id}-value`).textContent = value;
-        } else if (control.dataset.value) {
-          control.setAttribute('aria-pressed', String(control.dataset.value === value));
         } else {
           control.setAttribute('aria-pressed', String(value));
           control.querySelector('.option-value').textContent = value ? 'Sí' : 'No';

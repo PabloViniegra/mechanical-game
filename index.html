@@ -91,9 +91,9 @@
 
     <section id="screen-start" class="overlay title-screen" aria-labelledby="title">
       <div class="title-inner">
-        <h1 id="title" class="logo">
-          <span class="logo-top">Apocalipsis</span>
-          <span class="logo-main">QWERTY</span>
+        <h1 id="title" class="logo" aria-label="Apocalipsis QWERTY">
+          <span class="logo-top" aria-hidden="true">Apocalipsis</span>
+          <span class="logo-main" aria-hidden="true"><i>Q</i><i>W</i><i>E</i><i>R</i><i>T</i><i>Y</i></span>
         </h1>
 
         <div class="menu" role="group" aria-label="Elige dificultad" data-menu>
@@ -174,18 +174,10 @@
           </button>
         </div>
 
-        <h3 class="section-title">Juego</h3>
+        <h3 class="section-title">Partida</h3>
         <div class="options">
-          <div class="option">
-            <span id="opt-diff-label">Dificultad</span>
-            <div class="segmented" role="group" aria-labelledby="opt-diff-label">
-              <button type="button" data-option="difficulty" data-value="facil" aria-pressed="false">Fácil</button>
-              <button type="button" data-option="difficulty" data-value="normal" aria-pressed="false">Normal</button>
-              <button type="button" data-option="difficulty" data-value="pesadilla" aria-pressed="false">Pesadilla</button>
-            </div>
-          </div>
           <button type="button" class="option toggle" data-option="stats" aria-pressed="false">
-            <span>Precisión y velocidad en el marcador</span><span class="option-value" aria-hidden="true"></span>
+            <span>Precisión y PPM en el marcador</span><span class="option-value" aria-hidden="true"></span>
           </button>
           <button type="button" class="option toggle" data-option="guided" aria-pressed="false" aria-describedby="guided-option-help">
             <span>Modo guiado en la próxima partida</span><span class="option-value" aria-hidden="true"></span>
@@ -203,11 +195,16 @@
           </button>
         </div>
 
+        <h3 class="section-title">Datos</h3>
+        <div class="menu menu-data" data-menu>
+          <button type="button" class="item danger" id="reset-record" aria-describedby="reset-status"><span class="item-name">Borrar récord y progreso</span></button>
+        </div>
+        <p class="hint hint-data" id="reset-status" role="status"></p>
+
         <div class="menu" data-menu>
           <button type="button" class="item" id="options-back"><span class="item-name">Volver</span></button>
-          <button type="button" class="item danger" id="reset-record"><span class="item-name">Borrar récord y progreso</span></button>
         </div>
-        <p class="hint"><kbd>Esc</kbd> para volver</p>
+        <p class="hint"><kbd>Esc</kbd> para volver · Los cambios se guardan al instante</p>
       </div>
     </section>
 

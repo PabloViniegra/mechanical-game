@@ -1,6 +1,6 @@
 import { DIFFICULTY_ORDER, VOLUME_MAX } from './data/config.js';
 import { Game } from './core/game.js';
-import { createDemo, updateDemo } from './core/demo.js';
+import { createDemo, updateDemo, setDemoMood } from './core/demo.js';
 import { clamp } from './core/utils.js';
 import { view } from './core/view.js';
 import { Renderer } from './render/renderer.js';
@@ -48,6 +48,7 @@ const ui = createUI({
   start: startGame,
   resume,
   pause,
+  previewDifficulty: (key) => setDemoMood(demo, key),
   type: (c) => game.type(c),
   grenade: throwGrenade,
   retry: () => startGame(diffKey),
@@ -240,7 +241,7 @@ function frame(now) {
   last = now;
 
   // Las opciones abiertas desde la pausa también congelan la partida.
-  if (!game) updateDemo(demo, dt);
+  if (!game) updateDemo(demo, dt, { still: renderer.reducedMotion });
   else if (state !== 'paused' && state !== 'options') game.update(dt);
 
   if (state === 'playing') {
