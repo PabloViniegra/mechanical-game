@@ -2,12 +2,10 @@ import { view, gunTip } from './view.js';
 import { Effects } from './effects.js';
 import { createZombie, updateZombie, chestY, footY } from './zombie.js';
 import { rand } from './utils.js';
-import { PALETTE as C } from '../data/palette.js';
+import { BLOOD, GORE } from '../data/palette.js';
 
 const SPEED = { walker: 1, runner: 1.6, brute: 0.7 };
 const KINDS = ['walker', 'runner', 'walker', 'brute', 'walker', 'walker', 'runner', 'walker'];
-const BLOOD = [C.rust, C.blood];
-const GORE = [C.lichen, C.moss, C.rust, C.blood, C.bone];
 
 // Horda y cadencia del título según la dificultad que tiene el cursor.
 const MOODS = {

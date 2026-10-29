@@ -19,3 +19,7 @@ export const PALETTE = {
   flame: '#f5cf5a',
   cold: '#6c9aa8',
 };
+
+// Salpicaduras compartidas por la partida y la demo del título.
+export const BLOOD = [PALETTE.rust, PALETTE.blood];
+export const GORE = [PALETTE.lichen, PALETTE.moss, PALETTE.rust, PALETTE.blood, PALETTE.bone];

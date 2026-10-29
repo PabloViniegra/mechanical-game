@@ -1,4 +1,4 @@
-import { UPGRADES, RARITY, WORDS, ZOMBIE_TYPES, GUIDED, SYNERGIES } from '../data/config.js';
+import { UPGRADES, RARITY, WORDS, ZOMBIE_TYPES, GUIDED, SYNERGIES, DIFFICULTY } from '../data/config.js';
 import { fold } from '../core/utils.js';
 import { practiceFeedback } from '../core/practice.js';
 import { trainingReport, weakKeys } from '../core/progress.js';
@@ -100,6 +100,7 @@ export function createUI(actions) {
   };
 
   document.querySelectorAll('[data-diff]').forEach((btn) => {
+    btn.querySelector('.item-name').textContent = DIFFICULTY[btn.dataset.diff].name;
     btn.addEventListener('click', () => actions.start(btn.dataset.diff));
   });
   $('#resume').addEventListener('click', actions.resume);
@@ -255,6 +256,7 @@ export function createUI(actions) {
   }
 
   const pct = (v) => `${Math.round(v * 100)}%`;
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
   const span = (className, text) => {
     const s = document.createElement('span');
@@ -330,9 +332,9 @@ export function createUI(actions) {
       const changed = target !== lastGuidedTarget || word !== lastGuidedWord;
       const missed = game.misses > lastGuidedMisses;
       const intro = changed && target ? `Oleada ${game.wave}. Objetivo: ${word}. ` : '';
-      const error = missed ? `Fallo. Quedan ${GUIDED.missesPerLife - game.guidedMisses} fallos para perder una vida. ` : '';
+      const error = missed ? `Fallo. Quedan ${plural(GUIDED.missesPerLife - game.guidedMisses, 'fallo', 'fallos')} para perder una vida. ` : '';
       const ready = game.grenade >= 1 ? 'Granada lista.' : `Granada al ${Math.round(game.grenade * 100)} por ciento.`;
-      $('#guided-status').textContent = `${intro}${error}${next ? `Siguiente: ${next}. ` : ''}${game.lives} vidas. ${ready}`;
+      $('#guided-status').textContent = `${intro}${error}${next ? `Siguiente: ${next}. ` : ''}${plural(game.lives, 'vida', 'vidas')}. ${ready}`;
       lastGuidedTarget = target;
       lastGuidedWord = word;
       lastGuidedMisses = game.misses;
@@ -520,8 +522,7 @@ export function createUI(actions) {
       el.advice.classList.toggle('hidden', !advice);
       $('#practice-start').classList.toggle('hidden', !game.worstKey);
       const history = [...comparable.slice(-4), ...(game.wpm ? [{ wpm: game.wpm, accuracy: game.accuracy, duration: Math.round(game.time) }] : [])];
-      const difficulty = { facil: 'Fácil', normal: 'Normal', pesadilla: 'Pesadilla' }[game.diffKey];
-      $('#history-title').textContent = `Últimas partidas en ${difficulty}`;
+      $('#history-title').textContent = `Últimas partidas en ${DIFFICULTY[game.diffKey].name}`;
       $('#final-history').replaceChildren(...history.map((entry) => {
         const item = document.createElement('li');
         item.textContent = `${entry.wpm} PPM · ${entry.accuracy} % de precisión · ${entry.duration} s`;

@@ -66,10 +66,7 @@ const ui = createUI({
     state = 'practice';
     ui.showPractice(game);
   },
-  closePractice: () => {
-    state = 'over';
-    ui.showGameOver(game, lastRecord, previousProgress, progress);
-  },
+  closePractice,
   setOption,
   previewSfx: () => {
     sfx.ensure();
@@ -110,6 +107,11 @@ function closeOptions() {
   state = optionsFrom;
   if (state === 'paused') ui.showPause(game);
   else ui.showScreen('start');
+}
+
+function closePractice() {
+  state = 'over';
+  ui.showGameOver(game, lastRecord, previousProgress, progress);
 }
 
 function inMenu() {
@@ -245,7 +247,7 @@ bindKeyboard({
     else if (s === 'paused') resume();
     else if (s === 'over') toMenu();
     else if (s === 'options') closeOptions();
-    else if (s === 'practice') { state = 'over'; ui.showGameOver(game, lastRecord, previousProgress, progress); }
+    else if (s === 'practice') closePractice();
   },
   onOptions: openOptions,
   onDigit: (s, i) => {

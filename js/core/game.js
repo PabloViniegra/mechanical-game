@@ -3,7 +3,7 @@ import {
   PHRASE_WAVE, PHRASE_CHANCE, UPGRADES, UPGRADE_CHOICES, RARITY, WAVES, GUIDED,
   SYNERGIES, LOOT, PERFECT, WEAK_KEYS,
 } from '../data/config.js';
-import { PALETTE as C } from '../data/palette.js';
+import { PALETTE as C, BLOOD, GORE } from '../data/palette.js';
 import { view, gunTip } from './view.js';
 import { Effects } from './effects.js';
 import {
@@ -11,8 +11,6 @@ import {
 } from './zombie.js';
 import { rand, clamp, fold, pick, pickWeighted } from './utils.js';
 
-const BLOOD = [C.rust, C.blood];
-const GORE = [C.lichen, C.moss, C.rust, C.blood, C.bone];
 const SPLINTERS = [C.mud, C.earth, C.rust];
 const FIRE = [C.ember, C.flame, C.bone, C.slate];
 

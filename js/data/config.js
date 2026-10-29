@@ -74,9 +74,9 @@ export const PHRASE_CHANCE = 0.5;
 // Castigo por fallo: `keep` es la parte de la racha que se conserva y `cost` los
 // puntos que se pierden. Fácil enseña sin hundir; Pesadilla no perdona.
 export const DIFFICULTY = {
-  facil: { speed: 0.75, lives: 5, spawn: 1.3, keep: 0.5, cost: 0 },
-  normal: { speed: 1, lives: 3, spawn: 1, keep: 0, cost: 0 },
-  pesadilla: { speed: 1.35, lives: 2, spawn: 0.75, keep: 0, cost: 10 },
+  facil: { name: 'Fácil', speed: 0.75, lives: 5, spawn: 1.3, keep: 0.5, cost: 0 },
+  normal: { name: 'Normal', speed: 1, lives: 3, spawn: 1, keep: 0, cost: 0 },
+  pesadilla: { name: 'Pesadilla', speed: 1.35, lives: 2, spawn: 0.75, keep: 0, cost: 10 },
 };
 
 export const DIFFICULTY_ORDER = ['facil', 'normal', 'pesadilla'];
