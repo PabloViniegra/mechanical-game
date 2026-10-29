@@ -1,6 +1,6 @@
 import {
   DIFFICULTY, WORDS, ZOMBIE_TYPES, CROSS_TIME, COMBO_STEP, MAX_MULTIPLIER, BOSS, GRENADE,
-  PHRASE_WAVE, PHRASE_CHANCE, UPGRADES, UPGRADE_CHOICES, RARITY, WAVES,
+  PHRASE_WAVE, PHRASE_CHANCE, UPGRADES, UPGRADE_CHOICES, RARITY, WAVES, GUIDED,
 } from '../data/config.js';
 import { PALETTE as C } from '../data/palette.js';
 import { view, gunTip } from './view.js';
@@ -18,8 +18,10 @@ const FIRE = [C.ember, C.flame, C.bone, C.slate];
 // over, revive y los momentos sonoros spawn, lock, shoot, miss, kill, hurt,
 // grenade, ready (la granada se carga del todo), part (el jefe pierde una palabra) y shift (un mutante cambia de palabra).
 export class Game {
-  constructor(diffKey, events = {}) {
+  constructor(diffKey, events = {}, { guided = false } = {}) {
     this.diffKey = diffKey;
+    this.guided = guided;
+    this.guidedMisses = 0;
     this.diff = DIFFICULTY[diffKey];
     this.events = events;
     this.maxLives = this.diff.lives;
@@ -125,7 +127,7 @@ export class Game {
     // En la oleada del jefe le acompaña la mitad de la horda.
     this.toSpawn = this.waveTotal = this.bossPending ? 1 + Math.floor(total / 2) : total;
     this.waveDone = 0;
-    this.spawnTimer = WAVES.firstSpawn;
+    this.spawnTimer = this.guided ? 0 : WAVES.firstSpawn;
     this.wireLeft = this.perk('wire');
     this.lives = Math.min(this.maxLives, this.lives + this.perk('gravedigger'));
     if (this.level('quickfuse')) this.grenade = 1;
@@ -170,6 +172,10 @@ export class Game {
   // solo cuenta dentro de una frase: fuera de ella no es un fallo.
   type(c) {
     if (this.over || this.offer) return;
+    if (this.guided) {
+      this.selectGuidedTarget();
+      if (!this.target) return;
+    }
     let z = this.target;
     if (!z) {
       // Rebotes y granadas pueden dejar palabras empezadas: se fija por la siguiente letra.
@@ -188,7 +194,15 @@ export class Game {
     this.maxCombo = Math.max(this.maxCombo, this.combo);
     this.shoot(z);
     if (this.finished(z)) this.complete(z);
+    if (this.guided) this.selectGuidedTarget();
     this.emit('change');
+  }
+
+  selectGuidedTarget() {
+    if (!this.target || this.target.dead || this.target.gone) {
+      this.target = this.zombies.find((z) => !z.dead && !z.gone) ?? null;
+    }
+    if (this.target) this.target.masked = false;
   }
 
   finished(z) {
@@ -215,6 +229,13 @@ export class Game {
       this.missedKeys[key] = (this.missedKeys[key] ?? 0) + 1;
     }
     this.emit('miss', z);
+    if (this.guided && z) {
+      this.guidedMisses++;
+      if (this.guidedMisses === GUIDED.missesPerLife) {
+        this.guidedMisses = 0;
+        this.damage(z, 1);
+      }
+    }
     this.emit('change');
   }
 
@@ -316,6 +337,7 @@ export class Game {
       this.chip(z, letters);
     }
     this.emit('grenade');
+    if (this.guided) this.selectGuidedTarget();
     this.emit('change');
     return true;
   }
@@ -344,7 +366,11 @@ export class Game {
       if (this.target === z) this.target = null;
       this.waveDone++;
     }
-    this.lives -= boss ? BOSS.damage : 1;
+    this.damage(z, boss ? BOSS.damage : 1);
+  }
+
+  damage(z, amount) {
+    this.lives -= amount;
     if (!this.level('steady')) this.combo = 0;
     this.shake = 0.4;
     this.hurtFlash = 0.35;
@@ -377,27 +403,28 @@ export class Game {
     if (this.offer) return;
 
     this.time += dt;
-    if (this.toSpawn > 0) {
+    if (this.toSpawn > 0 && (!this.guided || !this.zombies.some((z) => !z.dead && !z.gone))) {
       this.spawnTimer -= dt;
       if (this.spawnTimer <= 0) {
         this.spawn();
         this.toSpawn--;
-        this.spawnTimer = Math.max(WAVES.spawnMin, WAVES.spawnStart - this.wave * WAVES.spawnStep)
+        this.spawnTimer = this.guided ? 0 : Math.max(WAVES.spawnMin, WAVES.spawnStart - this.wave * WAVES.spawnStep)
           * this.diff.spawn * rand(0.7, 1.3);
       }
     }
 
     for (const z of this.zombies) {
-      updateZombie(z, dt, this.pace(z));
+      updateZombie(z, dt, this.guided ? 0 : this.pace(z));
       // El mutante solo cambia mientras nadie le apunta.
-      if (z.type.shift && !z.dead && z !== this.target) {
+      if (!this.guided && z.type.shift && !z.dead && z !== this.target) {
         z.shiftT = Math.max(0, z.shiftT - dt);
         if (z.shiftT === 0) this.shift(z);
       }
-      if (!z.dead && reachedBarricade(z)) this.breach(z);
+      if (!this.guided && !z.dead && reachedBarricade(z)) this.breach(z);
       if (this.over) return;
     }
     this.zombies = this.zombies.filter((z) => !z.gone && !(z.dead && z.deathT > 0.8));
+    if (this.guided) this.selectGuidedTarget();
 
     if (this.toSpawn === 0 && this.zombies.length === 0) {
       this.bonus = this.wave * WAVES.bonus;
@@ -417,6 +444,7 @@ export class Game {
   }
 
   canOffer(id) {
+    if (this.guided && GUIDED.unavailableUpgrades.includes(id)) return false;
     if (this.level(id) >= UPGRADES[id].max) return false;
     // Las bengalas no sirven hasta que los encapuchados están a punto de salir.
     if (id === 'flare') return this.wave >= ZOMBIE_TYPES.masked.from - 1;

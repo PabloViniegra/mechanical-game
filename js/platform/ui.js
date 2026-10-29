@@ -1,5 +1,6 @@
-import { UPGRADES, RARITY, WORDS } from '../data/config.js';
+import { UPGRADES, RARITY, WORDS, ZOMBIE_TYPES, GUIDED } from '../data/config.js';
 import { fold } from '../core/utils.js';
+import { practiceFeedback } from '../core/practice.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -9,12 +10,12 @@ const UPGRADE_GUARD_MS = 400;
 // Compara el PPM con la partida anterior: la mejora es el motivo para volver.
 function progressText(wpm, prev) {
   if (!wpm) return '';
-  if (!prev.games) return `Primera marca: ${wpm} PPM. Ya tienes algo que superar.`;
+  if (!prev.games) return `Sin partidas recientes comparables. Marca actual: ${wpm} PPM.`;
   const delta = wpm - prev.lastWpm;
   const vs = delta === 0 ? 'Igual que la anterior'
     : `${Math.abs(delta)} ${delta > 0 ? 'más' : 'menos'} que la anterior`;
-  if (wpm > prev.bestWpm) return `¡Mejor PPM del historial! ${vs}.`;
-  return `Mejor PPM del historial: ${prev.bestWpm} · ${vs}.`;
+  if (wpm > prev.bestWpm) return `¡Mejor velocidad de tus partidas recientes en esta dificultad! ${vs}.`;
+  return `Mejor velocidad reciente: ${prev.bestWpm} PPM · ${vs}.`;
 }
 
 // Convierte el fallo más repetido en algo que practicar la próxima vez.
@@ -86,7 +87,40 @@ export function createUI(actions) {
     btn.addEventListener('click', () => actions.start(btn.dataset.diff));
   });
   $('#resume').addEventListener('click', actions.resume);
-  $('#quit').addEventListener('click', actions.menu);
+  let quitArmed = false;
+  const quit = $('#quit');
+  const disarmQuit = () => {
+    quitArmed = false;
+    quit.querySelector('.item-name').textContent = 'Abandonar';
+  };
+  quit.addEventListener('click', () => {
+    if (!quitArmed) {
+      quitArmed = true;
+      quit.querySelector('.item-name').textContent = '¿Abandonar? Se perderá esta partida';
+      return;
+    }
+    disarmQuit();
+    actions.menu();
+  });
+  quit.addEventListener('blur', disarmQuit);
+  $('#upgrade-pause').addEventListener('click', actions.pause);
+  $('#guided-pause').addEventListener('click', actions.pause);
+  $('#guided-grenade').addEventListener('click', actions.grenade);
+  const guidedInput = $('#guided-input');
+  guidedInput.addEventListener('input', (e) => {
+    if (e.isComposing) return;
+    const value = fold(guidedInput.value);
+    guidedInput.value = '';
+    for (const letter of value) {
+      if (/^[a-zñ ]$/.test(letter)) actions.type(letter);
+    }
+  });
+  guidedInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!e.repeat) actions.grenade();
+    }
+  });
   $('#retry').addEventListener('click', actions.retry);
   $('#menu').addEventListener('click', actions.menu);
   $('#practice-start').addEventListener('click', actions.practice);
@@ -94,9 +128,10 @@ export function createUI(actions) {
   const practiceInput = $('#practice-input');
   practiceInput.addEventListener('input', () => {
     const expected = $('#practice-words').textContent;
-    const value = fold(practiceInput.value);
+    const feedback = practiceFeedback(expected, practiceInput.value);
     const status = $('#practice-status');
-    status.textContent = value === fold(expected) ? '¡Práctica completada!' : fold(expected).startsWith(value) ? '' : 'Revisa lo escrito.';
+    practiceInput.setAttribute('aria-invalid', String(feedback.invalid));
+    status.textContent = feedback.message;
   });
   document.querySelectorAll('[data-open-options]').forEach((btn) => {
     btn.addEventListener('click', actions.openOptions);
@@ -149,7 +184,8 @@ export function createUI(actions) {
     const i = items.indexOf(document.activeElement);
     items[(i + step + items.length) % items.length].focus();
   });
-  document.addEventListener('pointerover', (e) => {
+  // Un cambio de pantalla bajo el ratón inmóvil no debe robar el foco de escritura.
+  document.addEventListener('pointermove', (e) => {
     const item = e.target.closest?.('[data-menu] button:not(:disabled)');
     if (item && item !== document.activeElement) item.focus({ preventScroll: true });
   });
@@ -191,7 +227,7 @@ export function createUI(actions) {
     return s;
   };
 
-  function renderPerks(list, game) {
+  function renderPerks(list, game, describe = false) {
     const items = Object.entries(game.perks).map(([id, level]) => {
       const up = UPGRADES[id];
       const li = document.createElement('li');
@@ -199,6 +235,7 @@ export function createUI(actions) {
       li.append(span('perk-name', up.name));
       if (Number.isFinite(up.max) && up.max > 1) li.append(span('perk-level', `${level}/${up.max}`));
       else if (level > 1) li.append(span('perk-level', `x${level}`));
+      if (describe) li.append(span('perk-desc', up.desc));
       return li;
     });
     if (!items.length) {
@@ -211,20 +248,69 @@ export function createUI(actions) {
   }
 
   let upgradeArmedAt = 0;
+  let guided = false;
+  let lastGuidedState = '';
+  let lastGuidedTarget = null;
+  let lastGuidedWord = '';
+  let lastGuidedMisses = 0;
+  const enemyHelp = $('#enemy-help');
+  for (const type of Object.values(ZOMBIE_TYPES)) {
+    if (!type.hint) continue;
+    const item = document.createElement('li');
+    item.textContent = `${type.name}: ${type.hint}.`;
+    enemyHelp.append(item);
+  }
   return {
+    setGuided(enabled) {
+      guided = enabled;
+      lastGuidedState = '';
+      lastGuidedTarget = null;
+      lastGuidedWord = '';
+      lastGuidedMisses = 0;
+      guidedInput.value = '';
+      $('#guided-target').textContent = '';
+      $('#guided-status').textContent = '';
+      $('#guided-play').classList.toggle('hidden', !enabled);
+    },
+    updateGuided(game) {
+      const target = game.target;
+      const word = target?.word ?? '';
+      const typed = target?.typed ?? 0;
+      const signature = `${game.wave}|${word}|${typed}|${game.misses}|${game.lives}|${game.kills}|${game.grenade}`;
+      if (signature === lastGuidedState) return;
+      lastGuidedState = signature;
+      const expected = target?.folded[typed];
+      const next = expected === ' ' ? 'espacio' : expected;
+      $('#guided-target').textContent = target
+        ? `Objetivo: ${word}. Completado: ${typed} de ${target.folded.length} caracteres.`
+        : 'Preparando el siguiente objetivo…';
+      const changed = target !== lastGuidedTarget || word !== lastGuidedWord;
+      const missed = game.misses > lastGuidedMisses;
+      const intro = changed && target ? `Oleada ${game.wave}. Objetivo: ${word}. ` : '';
+      const error = missed ? `Fallo. Quedan ${GUIDED.missesPerLife - game.guidedMisses} fallos para perder una vida. ` : '';
+      const ready = game.grenade >= 1 ? 'Granada lista.' : `Granada al ${Math.round(game.grenade * 100)} por ciento.`;
+      $('#guided-status').textContent = `${intro}${error}${next ? `Siguiente: ${next}. ` : ''}${game.lives} vidas. ${ready}`;
+      lastGuidedTarget = target;
+      lastGuidedWord = word;
+      lastGuidedMisses = game.misses;
+    },
     upgradeReady() { return performance.now() >= upgradeArmedAt; },
     showPractice(game) {
       const key = game.worstKey?.key;
       const words = Object.values(WORDS).flat().filter((word) => key && fold(word).includes(key)).slice(0, 5);
       $('#practice-words').textContent = words.length ? words.join(' ') : 'cadáver podrido mano hambrienta';
       practiceInput.value = '';
+      practiceInput.setAttribute('aria-invalid', 'false');
       $('#practice-status').textContent = '';
       this.showScreen('practice');
     },
     showScreen(name) {
       for (const [key, screen] of Object.entries(el.screens)) screen.classList.toggle('hidden', key !== name);
+      el.hud.inert = Boolean(name) || guided;
+      $('#guided-play').classList.toggle('hidden', !guided || Boolean(name));
       const screen = el.screens[name];
       if (screen) screen.querySelector('[data-autofocus]')?.focus();
+      else if (guided) guidedInput.focus();
       else document.activeElement?.blur();
     },
 
@@ -266,6 +352,10 @@ export function createUI(actions) {
     },
 
     banner(title, sub) {
+      if (guided) {
+        $('#guided-status').textContent = `${title}. ${sub}`;
+        return;
+      }
       const t = document.createElement('span');
       t.className = 'banner-title';
       t.textContent = title;
@@ -308,6 +398,9 @@ export function createUI(actions) {
       this.setMuted(settings.muted);
       el.crt.classList.toggle('hidden', !settings.crt);
       el.hud.classList.toggle('no-stats', !settings.stats);
+      $('#mode-description').textContent = settings.guided
+        ? 'Modo guiado activado: objetivos en texto, sin límite de tiempo ni récords arcade. Elige una dificultad para empezar.'
+        : 'Para jugar sin presión de tiempo y con objetivos en texto, activa el modo guiado en Opciones.';
       // El menú enfoca la dificultad elegida para empezar con Enter.
       document.querySelectorAll('[data-diff]').forEach((card) => {
         card.toggleAttribute('data-autofocus', card.dataset.diff === settings.difficulty);
@@ -352,11 +445,15 @@ export function createUI(actions) {
     },
 
     showPause(game) {
-      renderPerks(el.pausePerks, game);
+      $('#pause-guided-help').classList.toggle('hidden', !game.guided);
+      $('#pause-arcade-help').classList.toggle('hidden', game.guided);
+      renderPerks(el.pausePerks, game, true);
       this.showScreen('pause');
     },
 
     showGameOver(game, isRecord, prev) {
+      $('#guided-result').classList.toggle('hidden', !game.guided);
+      $('#history-details').classList.toggle('hidden', game.guided);
       el.newRecord.classList.toggle('hidden', !isRecord);
       el.final.score.textContent = game.score;
       el.final.wave.textContent = game.wave;
@@ -365,7 +462,7 @@ export function createUI(actions) {
       el.final.wpm.textContent = game.wpm;
       el.final.combo.textContent = game.maxCombo;
       const comparable = prev.history.filter((entry) => entry.difficulty === game.diffKey);
-      const line = progressText(game.wpm, {
+      const line = game.guided ? '' : progressText(game.wpm, {
         games: comparable.length,
         lastWpm: comparable.at(-1)?.wpm ?? 0,
         bestWpm: Math.max(0, ...comparable.map((entry) => entry.wpm)),
@@ -377,8 +474,13 @@ export function createUI(actions) {
       el.advice.classList.toggle('hidden', !advice);
       $('#practice-start').classList.toggle('hidden', !game.worstKey);
       const history = [...comparable.slice(-4), ...(game.wpm ? [{ wpm: game.wpm, accuracy: game.accuracy, duration: Math.round(game.time) }] : [])];
-      $('#final-history').textContent = history.length
-        ? `Últimas partidas en ${game.diffKey}: ${history.map((entry) => `${entry.wpm} PPM · ${entry.accuracy} % · ${entry.duration} s`).join(' / ')}` : '';
+      const difficulty = { facil: 'Fácil', normal: 'Normal', pesadilla: 'Pesadilla' }[game.diffKey];
+      $('#history-title').textContent = `Últimas partidas en ${difficulty}`;
+      $('#final-history').replaceChildren(...history.map((entry) => {
+        const item = document.createElement('li');
+        item.textContent = `${entry.wpm} PPM · ${entry.accuracy} % de precisión · ${entry.duration} s`;
+        return item;
+      }));
       renderPerks(el.overPerks, game);
       this.showScreen('over');
     },

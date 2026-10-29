@@ -10,14 +10,15 @@ test('sin datos guardados se usan las opciones por defecto', () => {
 });
 
 test('conserva las opciones válidas y descarta las desconocidas', () => {
-  const saved = { music: 0, sfx: 3, muted: true, shake: false, crt: false, stats: false, difficulty: 'pesadilla' };
+  const saved = { music: 0, sfx: 3, muted: true, shake: false, crt: false, stats: false, guided: true, difficulty: 'pesadilla' };
   assert.deepEqual(sanitizeSettings({ ...saved, extra: 1 }), saved);
 });
 
 test('los valores inválidos vuelven a su valor por defecto', () => {
-  const s = sanitizeSettings({ music: 99, sfx: 2.5, muted: 'true', difficulty: 'toString' });
+  const s = sanitizeSettings({ music: 99, sfx: 2.5, muted: 'true', guided: 'true', difficulty: 'toString' });
   assert.equal(s.music, VOLUME_MAX);
   assert.equal(s.sfx, DEFAULT_SETTINGS.sfx);
   assert.equal(s.muted, DEFAULT_SETTINGS.muted);
+  assert.equal(s.guided, false);
   assert.equal(s.difficulty, DEFAULT_SETTINGS.difficulty);
 });

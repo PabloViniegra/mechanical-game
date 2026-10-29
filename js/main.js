@@ -19,6 +19,7 @@ renderer.resize();
 
 let state = 'menu'; // menu | playing | paused | upgrade | over | options | practice
 let optionsFrom = 'menu'; // estado al que vuelve la pantalla de opciones
+let pausedFrom = 'playing';
 let game = null;
 let settings = loadSettings();
 let diffKey = settings.difficulty;
@@ -46,6 +47,9 @@ const sounds = {
 const ui = createUI({
   start: startGame,
   resume,
+  pause,
+  type: (c) => game.type(c),
+  grenade: throwGrenade,
   retry: () => startGame(diffKey),
   upgrade: chooseUpgrade,
   menu: toMenu,
@@ -113,7 +117,7 @@ function startGame(key) {
     // Presenta cada especial la primera vez que sale para que se aprenda su color.
     spawn: (z) => {
       sounds.spawn();
-      if (!z.type.hint || seen.has(z.kind)) return;
+      if (game?.guided || !z.type.hint || seen.has(z.kind)) return;
       seen.add(z.kind);
       ui.banner(z.type.name.toUpperCase(), z.type.hint);
     },
@@ -137,8 +141,9 @@ function startGame(key) {
       sfx.wave();
     },
     over: endGame,
-  });
+  }, { guided: settings.guided });
   state = 'playing';
+  ui.setGuided(game.guided);
   ui.showScreen(null);
   game.start();
   music.play(true);
@@ -152,22 +157,26 @@ function chooseUpgrade(id) {
 }
 
 function pause() {
+  if (state !== 'playing' && state !== 'upgrade') return;
+  pausedFrom = state;
   state = 'paused';
   music.pause();
   ui.showPause(game);
 }
 
 function resume() {
-  state = 'playing';
+  if (state !== 'paused') return;
+  state = pausedFrom;
   music.play();
-  ui.showScreen(null);
+  if (state === 'upgrade') ui.showUpgrades(game, game.offer);
+  else ui.showScreen(null);
 }
 
 function endGame(_, g) {
   state = 'over';
   music.stop();
   sfx.gameOver();
-  const isRecord = g.score > record;
+  const isRecord = !g.guided && g.score > record;
   lastRecord = isRecord;
   if (isRecord) {
     record = g.score;
@@ -188,16 +197,22 @@ function toMenu() {
   game = null;
   music.stop();
   ui.setHudVisible(false);
+  ui.setGuided(false);
   ui.clearBanner();
   ui.showScreen('start');
+}
+
+function throwGrenade() {
+  if (state !== 'playing') return;
+  if (!game.throwGrenade()) ui.banner('GRANADA SIN CARGA', 'Abate zombis para recargarla');
 }
 
 bindKeyboard({
   getState: () => state,
   onChar: (c) => game.type(c),
-  onGrenade: () => game.throwGrenade(),
+  onGrenade: throwGrenade,
   onEscape: (s) => {
-    if (s === 'playing') pause();
+    if (s === 'playing' || s === 'upgrade') pause();
     else if (s === 'paused') resume();
     else if (s === 'over') toMenu();
     else if (s === 'options') closeOptions();
@@ -229,6 +244,7 @@ function frame(now) {
   else if (state !== 'paused' && state !== 'options') game.update(dt);
 
   if (state === 'playing') {
+    if (game.guided) ui.updateGuided(game);
     hudTimer -= dt;
     if (hudTimer <= 0) {
       hudTimer = 0.5;

@@ -173,6 +173,12 @@ export const RARITY = {
 
 export const UPGRADE_CHOICES = 3;
 
+// En modo guiado manda la precisión, no el tiempo de lectura del objetivo.
+export const GUIDED = {
+  missesPerLife: 3,
+  unavailableUpgrades: ['frost', 'heavy', 'wire', 'scope', 'flare', 'adrenaline', 'bloodpact'],
+};
+
 export const RECORD_KEY = 'teclado-zombie-record';
 export const PROGRESS_KEY = 'teclado-zombie-progress';
 
@@ -186,5 +192,6 @@ export const DEFAULT_SETTINGS = {
   shake: true,
   crt: false,
   stats: true,
+  guided: false,
   difficulty: 'normal',
 };

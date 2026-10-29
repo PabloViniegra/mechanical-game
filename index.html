@@ -75,6 +75,20 @@
 
     <div id="banner" class="banner" aria-live="polite"></div>
 
+    <section id="guided-play" class="guided-play hidden" aria-labelledby="guided-title">
+      <h2 id="guided-title" class="section-title">Partida guiada</h2>
+      <p id="guided-help">Sin límite de tiempo. Escribe una letra cada vez; las tildes son opcionales. Cada tres fallos pierdes una vida. Este modo no guarda récords arcade.</p>
+      <p id="guided-target" class="progress"></p>
+      <p id="guided-status" role="status" aria-atomic="true"></p>
+      <label for="guided-input">Escribe la siguiente letra</label>
+      <input id="guided-input" class="typing-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="guided-help guided-target guided-status">
+      <div class="menu" data-menu>
+        <button type="button" class="item" id="guided-grenade"><span class="item-name">Lanzar granada</span></button>
+        <button type="button" class="item" id="guided-pause"><span class="item-name">Pausa y ayuda</span></button>
+      </div>
+      <p class="hint"><kbd>Enter</kbd> granada · <kbd>Esc</kbd> pausa. Tras usar un botón, vuelve al campo de escritura para continuar.</p>
+    </section>
+
     <section id="screen-start" class="overlay title-screen" aria-labelledby="title">
       <div class="title-inner">
         <h1 id="title" class="logo">
@@ -108,6 +122,8 @@
           Escribe la palabra de un zombi para dispararle; la primera letra fija el objetivo.
           Las tildes son opcionales. <kbd>Enter</kbd> granada · <kbd>Esc</kbd> pausa
         </p>
+        <p class="mobile-notice hint">Necesitas un teclado físico para jugar. En móvil, abre el juego en un ordenador.</p>
+        <p class="hint" id="mode-description">Para jugar sin presión de tiempo y con objetivos en texto, activa el modo guiado en Opciones.</p>
         <p class="record">Récord <strong id="record">000000</strong><span id="best-wpm-wrap" class="hidden"> · PPM máx global <strong id="best-wpm">0</strong></span></p>
       </div>
     </section>
@@ -115,14 +131,25 @@
     <section id="screen-pause" class="overlay hidden" aria-labelledby="pause-title">
       <div class="panel">
         <h2 id="pause-title" class="screen-title">Pausa</h2>
-                <h3 class="section-title">Mejoras</h3>
-        <ul id="pause-perks" class="perk-list"></ul>
         <div class="menu" data-menu>
           <button type="button" class="item" id="resume" data-autofocus><span class="item-name">Continuar</span></button>
           <button type="button" class="item" data-open-options><span class="item-name">Opciones</span></button>
           <button type="button" class="item" id="quit"><span class="item-name">Abandonar</span></button>
         </div>
         <p class="hint"><kbd>Esc</kbd> para continuar</p>
+        <details class="help">
+          <summary>Consultar mejoras y controles</summary>
+          <h3 class="section-title">Tus mejoras</h3>
+          <ul id="pause-perks" class="perk-list perk-details"></ul>
+          <h3 class="section-title">Cómo sobrevivir</h3>
+          <p id="pause-guided-help" class="hidden">Modo guiado: el objetivo se fija automáticamente y espera sin límite de tiempo. Cada tres fallos pierdes una vida. Las tildes son opcionales y la ñ cuenta. Completa las palabras para avanzar de oleada; Enter lanza una granada cargada.</p>
+          <div id="pause-arcade-help">
+          <p>La primera letra fija el objetivo. Completa su palabra; un fallo no lo cambia. Las tildes son opcionales, la ñ cuenta y las frases necesitan espacios.</p>
+          <p><kbd>Enter</kbd> lanza una granada cuando está cargada. Abatir zombis la recarga. <kbd>Esc</kbd> pausa la partida.</p>
+          <ul id="enemy-help"></ul>
+          <p>El jefe aparece cada cinco oleadas: completa todas sus palabras. Si llega a la barricada, quita dos vidas y retrocede.</p>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -158,8 +185,12 @@
             </div>
           </div>
           <button type="button" class="option toggle" data-option="stats" aria-pressed="false">
-            <span>Precisión y PPM en el HUD</span><span class="option-value" aria-hidden="true"></span>
+            <span>Precisión y velocidad en el marcador</span><span class="option-value" aria-hidden="true"></span>
           </button>
+          <button type="button" class="option toggle" data-option="guided" aria-pressed="false" aria-describedby="guided-option-help">
+            <span>Modo guiado en la próxima partida</span><span class="option-value" aria-hidden="true"></span>
+          </button>
+          <p id="guided-option-help" class="option-help">Objetivos en texto para lectores de pantalla, sin límite de tiempo. Cada tres fallos pierdes una vida. Sin récords arcade.</p>
         </div>
 
         <h3 class="section-title">Pantalla</h3>
@@ -168,7 +199,7 @@
             <span>Temblor de pantalla</span><span class="option-value" aria-hidden="true"></span>
           </button>
           <button type="button" class="option toggle" data-option="crt" aria-pressed="false">
-            <span>Filtro CRT</span><span class="option-value" aria-hidden="true"></span>
+            <span>Filtro de pantalla antigua (CRT)</span><span class="option-value" aria-hidden="true"></span>
           </button>
         </div>
 
@@ -186,7 +217,8 @@
         <p id="upgrade-bonus" class="record upgrade-bonus"></p>
         <h3 class="section-title">Elige una mejora</h3>
         <div id="upgrade-choices" class="menu" role="group" aria-label="Mejoras" data-menu></div>
-        <p class="hint">Pulsa <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> o haz clic</p>
+        <p class="hint">Pulsa <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> para elegir · <kbd>Esc</kbd> pausa</p>
+        <div class="menu"><button type="button" class="item" id="upgrade-pause"><span class="item-name">Pausa y ayuda</span></button></div>
       </div>
     </section>
 
@@ -194,6 +226,7 @@
       <div class="panel">
         <h2 id="over-title" class="screen-title dead">Te han devorado</h2>
         <p id="new-record" class="new-record hidden">¡Nuevo récord!</p>
+        <p id="guided-result" class="hint hidden">Partida guiada: resultados de esta sesión, separados del récord arcade.</p>
         <dl class="summary">
           <div><dt>PPM</dt><dd id="final-wpm">0</dd></div>
           <div><dt>Precisión</dt><dd id="final-accuracy">0%</dd></div>
@@ -203,9 +236,13 @@
           <div><dt>Mejor racha</dt><dd id="final-combo">0</dd></div>
         </dl>
         <p id="final-progress" class="progress hidden"></p>
-        <p id="final-history" class="hint"></p>
         <p id="final-advice" class="advice hidden"></p>
-        <p class="hint">PPM: aciertos divididos entre cinco y el tiempo de partida, incluidas las esperas; excluye pausas y mejoras.</p>
+        <details class="help" id="history-details">
+          <summary id="history-title">Últimas partidas</summary>
+          <ol id="final-history"></ol>
+          <p>Comparación por dificultad con hasta 20 partidas anteriores guardadas. Se muestran hasta cinco, incluida la actual.</p>
+        </details>
+        <p class="hint">PPM significa palabras por minuto: aciertos divididos entre cinco y los minutos de partida. Incluye esperas; excluye pausas y mejoras.</p>
         <h3 class="section-title">Mejoras</h3>
         <ul id="over-perks" class="perk-list"></ul>
         <div class="menu" data-menu>
@@ -213,7 +250,7 @@
           <button type="button" class="item hidden" id="practice-start"><span class="item-name">Practicar letra difícil</span></button>
           <button type="button" class="item" id="menu"><span class="item-name">Menú</span></button>
         </div>
-        <p class="hint"><kbd>Enter</kbd> reintentar · <kbd>Esc</kbd> menú</p>
+        <p class="hint"><kbd>Enter</kbd> activa la opción enfocada · <kbd>Esc</kbd> menú</p>
       </div>
     </section>
     <section id="screen-practice" class="overlay hidden" aria-labelledby="practice-title">
@@ -222,7 +259,7 @@
         <p class="hint">Escribe estas palabras, separadas por espacios. Las tildes son opcionales.</p>
         <p id="practice-words" class="progress"></p>
         <label for="practice-input">Tu práctica</label>
-        <input id="practice-input" type="text" autocomplete="off" spellcheck="false" data-autofocus>
+        <input id="practice-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="practice-words practice-status" aria-invalid="false" data-autofocus>
         <p id="practice-status" class="hint" aria-live="polite"></p>
         <div class="menu"><button type="button" class="item" id="practice-back">Volver al resumen</button></div>
       </div>

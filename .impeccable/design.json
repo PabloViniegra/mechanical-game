@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-29T00:00:00Z",
+  "generatedAt": "2026-10-29T12:20:36Z",
   "title": "Design System: Apocalipsis QWERTY",
   "extensions": {
     "colorMeta": {
@@ -24,9 +24,9 @@
     "typographyMeta": {
       "display": { "displayName": "Display", "purpose": "Solo «QWERTY» del logo, con relieve óxido → sangre → tinta." },
       "headline": { "displayName": "Headline", "purpose": "Títulos de pantalla, carteles de oleada y opciones del menú principal." },
-      "title": { "displayName": "Title", "purpose": "Opciones de menú en paneles, valores del HUD, multiplicador." },
+      "title": { "displayName": "Title", "purpose": "Opciones de menú en paneles, valores del HUD, multiplicador, títulos de sección, resumen, récords y valores de opciones." },
       "body": { "displayName": "Body", "purpose": "VT323 para ayuda, descripciones, metadatos y etiquetas de opciones." },
-      "label": { "displayName": "Label", "purpose": "Etiquetas del HUD, títulos de sección, kbd, valores de opción, chips." }
+      "label": { "displayName": "Label", "purpose": "Etiquetas del HUD, atajos, kbd y chips de mejoras." }
     },
     "shadows": [
       { "name": "relieve-logo", "value": "0 var(--u) 0 var(--rust), 0 calc(var(--u) * 2) 0 var(--blood), 0 calc(var(--u) * 3) 0 var(--ink)", "purpose": "text-shadow del logo; sin desenfoque." },
@@ -45,6 +45,20 @@
     ]
   },
   "components": [
+    {
+      "name": "Entrada de práctica",
+      "kind": "input",
+      "description": "Campo nativo de práctica y modo guiado: borde recto, foco brasa y errores descritos en texto.",
+      "html": "<label class=\"ds-input-label\" for=\"ds-practice\">Tu práctica</label><input class=\"ds-input\" id=\"ds-practice\" type=\"text\" autocomplete=\"off\" spellcheck=\"false\">",
+      "css": ".ds-input-label { font-family: var(--body, monospace); color: var(--bone, #e8dfc4); } .ds-input { display: block; width: 100%; padding: 8px; border: 2px solid var(--slate, #2e3b36); border-radius: 0; font: 20px var(--body, monospace); color: var(--bone, #e8dfc4); background: var(--ink, #0d0f0e); } .ds-input:focus-visible { outline: 2px solid var(--ember, #e0892e); outline-offset: 4px; } .ds-input[aria-invalid='true'] { border-color: var(--salmon, #e07a5f); }"
+    },
+    {
+      "name": "Elección de mejora",
+      "kind": "button",
+      "description": "Nombre, metadatos y descripción en filas separadas para poder comparar nombres largos.",
+      "html": "<button class=\"ds-upgrade\"><span class=\"ds-upgrade-name\">Trato del sepulturero</span><span>Maldita · Nivel 1/1</span><span class=\"ds-upgrade-desc\">Recuperas una vida por oleada, pero traen un 25 % más de zombis.</span></button>",
+      "css": ".ds-upgrade { display: grid; gap: 4px; padding: 8px; text-align: left; border: 0; border-radius: 0; font: 20px var(--body, monospace); color: var(--salmon, #e07a5f); background: var(--ink, #0d0f0e); cursor: pointer; } .ds-upgrade-name { font: 16px var(--pixel, monospace); line-height: 1.3; overflow-wrap: anywhere; } .ds-upgrade-desc { color: var(--dust, #b89a78); line-height: 1.4; } .ds-upgrade:hover .ds-upgrade-name, .ds-upgrade:focus-visible .ds-upgrade-name { color: var(--ember, #e0892e); } .ds-upgrade:focus-visible { outline: 2px solid var(--ember, #e0892e); outline-offset: 4px; }"
+    },
     {
       "name": "Elemento de menú",
       "kind": "button",

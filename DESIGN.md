@@ -218,6 +218,14 @@ Cuadro de diálogo de consola.
 - **Border:** 1u hueso más anillo exterior de tinta de 1u.
 - **Internal Padding:** 6u × 7u (5u × 4u en estrecho).
 
+### Mejoras, ayuda y escritura
+- **Oferta de mejoras:** nombre en su propia fila; rareza y nivel juntos debajo; descripción con interlineado 1.4. El atajo ocupa una columna aparte en escritorio y desaparece en estrecho.
+- **Ayuda:** bloques nativos `details` en pausa y resumen, con foco brasa visible. Los efectos adquiridos se consultan con su descripción, no solo con el nombre.
+- **Texto explicativo:** instrucciones, ayudas y descripciones usan interlineado 1.4 para facilitar la lectura.
+- **Escritura:** campos nativos de esquinas rectas, hueso sobre tinta, borde pizarra y foco brasa. Los errores añaden texto que indica la primera posición incorrecta, además del borde salmón.
+- **Modo guiado:** superficie tinta desplazable con objetivo y siguiente carácter en texto, entrada etiquetada y estado anunciado. Conserva la tipografía y los controles de la recreativa; no impone un límite de tiempo.
+- **Móvil:** aviso visible de teclado físico; no se añade teclado virtual.
+
 ### Filas de opciones
 - **Style:** fila de 44px mínimo con separador inferior pizarra de 0.5u; etiqueta en VT323 y valor a la derecha en Label brasa.
 - **Interruptores:** valor apagado en polvo; hover con fondo noche.

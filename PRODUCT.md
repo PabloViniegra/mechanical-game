@@ -25,6 +25,9 @@ Práctica de mecanografía en español real: vocabulario y frases en castellano 
 - Partidas en navegador de escritorio, servidas desde el propio origen (`npm start`, http://localhost:8000).
 - Flujo: menú (dificultad Fácil / Normal / Pesadilla, opciones) → partida por oleadas → elección de mejora tras cada oleada → jefe cada 5 oleadas → game over con resumen (puntos, oleada, abatidos, precisión) y récord local.
 - Pausa con `Esc`, granada con `Enter`, menús con atajos numéricos.
+- `Esc` también abre pausa desde las mejoras y vuelve a la misma oferta. La pausa permite consultar efectos adquiridos, controles y enemigos; abandonar requiere confirmar.
+- El resumen compara velocidad con partidas recientes de la misma dificultad (hasta 20 anteriores guardadas) y ofrece práctica con diagnóstico de la primera posición incorrecta. Los récords globales arcade se conservan por separado.
+- Modo guiado opcional para la próxima partida: objetivos por turnos en texto y entrada nativa con foco, sin límite de tiempo. Cada tres fallos se pierde una vida. Revela palabras ocultas, impide mutaciones mientras se lee y excluye mejoras de movimiento sin efecto; sus resultados no modifican récords ni historial arcade.
 
 ## Capabilities and Constraints
 

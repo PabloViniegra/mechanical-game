@@ -23,8 +23,8 @@ export function sanitizeProgress(raw) {
 }
 
 // Una partida demasiado corta para medir PPM no cuenta como anterior.
-export function recordProgress(prev, { wpm, accuracy, diffKey, time }) {
-  if (!wpm) return prev;
+export function recordProgress(prev, { wpm, accuracy, diffKey, time, guided }) {
+  if (!wpm || guided) return prev;
   return {
     games: prev.games + 1,
     bestWpm: Math.max(prev.bestWpm, wpm),
