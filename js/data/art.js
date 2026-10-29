@@ -12,6 +12,7 @@ export const ZOMBIE_ACCENTS = {
   splitter: C.sick,
   shifter: C.cold,
   boss: C.rust,
+  crate: C.flame,
 };
 
 export const ZOMBIE_PALETTES = {
@@ -47,6 +48,7 @@ export const ZOMBIE_PALETTES = {
     t: C.blood, T: C.ink, r: C.bone, b: C.rust, p: C.earth, P: C.night,
     f: C.ink, k: C.bone,
   },
+  crate: { k: C.mud, w: C.earth, r: C.flame },
 };
 
 export const WALKER = {
@@ -179,6 +181,20 @@ export const spriteSize = (rows, outline = true) => ({
   h: rows.length + (outline ? 2 : 0),
 });
 
+// Sin piernas: la caja no anda, así que sus tres fotogramas son iguales.
+export const CRATE = {
+  body: [
+    'kkkkkkkkk',
+    'kwwwwwwwk',
+    'kwwwrwwwk',
+    'kwwrrrwwk',
+    'kwwwrwwwk',
+    'kwwwwwwwk',
+    'kkkkkkkkk',
+  ],
+  legs: [[], [], []],
+};
+
 // Arte de cada tipo de zombi; los especiales reutilizan siluetas con otra paleta.
 export const ZOMBIE_ART = {
   walker: WALKER,
@@ -188,6 +204,7 @@ export const ZOMBIE_ART = {
   splitter: BRUTE,
   shifter: WALKER,
   boss: BOSS,
+  crate: CRATE,
 };
 
 // Fuente bitmap de las etiquetas: mayúsculas de 5 px de alto, anchura variable.

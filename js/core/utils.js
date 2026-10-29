@@ -1,5 +1,11 @@
 export const rand = (min, max) => min + Math.random() * (max - min);
 export const pick = (list) => list[Math.floor(Math.random() * list.length)];
+export function pickWeighted(items, weight) {
+  const weights = items.map(weight);
+  let r = Math.random() * weights.reduce((a, b) => a + b, 0);
+  const i = weights.findIndex((w) => (r -= w) < 0);
+  return items[i === -1 ? items.length - 1 : i];
+}
 export const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
 // Quita tildes y diéresis, pero conserva la ñ.

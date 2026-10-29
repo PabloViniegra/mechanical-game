@@ -451,6 +451,7 @@ kbd {
 .item.cursed .item-meta { color: var(--salmon); }
 .item.rare .item-name,
 .item.rare .item-meta { color: var(--sick); }
+.item-synergy { color: var(--ember); }
 .item.danger:focus .item-name,
 .item.rare:focus .item-name,
 .item.cursed:focus .item-name { color: var(--ember); }
@@ -508,6 +509,7 @@ kbd {
 .perk-level { color: var(--ember); }
 .perk.rare .perk-name { color: var(--sick); }
 .perk.cursed .perk-name { color: var(--salmon); }
+.perk.synergy .perk-name { color: var(--ember); }
 .perk.empty { color: var(--dust); }
 
 .new-record {

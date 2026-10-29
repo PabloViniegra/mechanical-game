@@ -76,6 +76,9 @@ export function updateZombie(z, dt, pace = 1) {
   z.x -= z.speed * dt * pace;
 }
 
+// Las cajas de botín comparten lista con los zombis pero nunca son una amenaza.
+export const isPickup = (z) => Boolean(z.type.pickup);
+
 export const frameIndex = (z) => Math.floor(z.anim) % 4;
 export const footY = (z) => laneY(z.lane);
 export const chestY = (z) => footY(z) - Math.round(z.h * 0.6);

@@ -97,6 +97,9 @@ export const ZOMBIE_TYPES = {
   shifter: { words: 'medium', speed: 1.1, bonus: 2, from: 6, step: 0.04, cap: 0.1, shift: 5,
     name: 'Mutante', hint: 'Cambia de palabra si no le apuntas' },
   boss: { words: 'long', speed: 0.3, bonus: 3 },
+  // Caja de botín (`pickup`): no avanza ni hace daño; solo caduca si no se escribe a tiempo.
+  crate: { words: 'short', speed: 0, bonus: 0, pickup: true,
+    name: 'Botín', hint: 'Escribe su palabra antes de que desaparezca' },
 };
 
 // Jefe cada `every` oleadas: `parts` palabras en la primera aparición y una más
@@ -108,6 +111,30 @@ export const BOSS = { every: 5, parts: 3, damage: 2, knockback: 60, push: 14, ra
 // La granada se carga con `perKill` por zombi abatido y quita `letters` letras
 // a todos los zombis en pantalla.
 export const GRENADE = { perKill: 0.1, letters: 2, push: 10 };
+
+// Botín: desde la oleada `from`, cada baja suelta una caja con probabilidad
+// `chance` que dura `life` segundos. Solo se sortean premios útiles en ese momento.
+export const LOOT = {
+  from: 2, chance: 0.08, life: 5,
+  rewards: {
+    medkit: { label: '+1 VIDA', weight: 1 },
+    ammo: { label: '+GRANADA', weight: 1, value: 0.5 },
+    cash: { weight: 1.5, value: 150 },
+  },
+};
+
+// Oleada sin fallos ni daño: el bonus de oleada se multiplica por `bonus` y la
+// oferta trae `extra` cartas más, una de ellas rara si queda alguna.
+export const PERFECT = { bonus: 2, extra: 1 };
+
+// Teclas débiles entre partidas. Una letra con al menos `minSamples` pulsaciones
+// y un índice de fallo de `minRate` o más entra entre las `count` peores. Esas
+// letras salen en `chance` de las palabras y su zombi da `bonus` más de puntos.
+// Al superar `memory` pulsaciones se reduce a la mitad para que pese lo reciente.
+export const WEAK_KEYS = { minSamples: 15, minRate: 0.06, count: 3, chance: 0.35, bonus: 0.5, memory: 300 };
+
+// Segundos entre latidos con la última vida; el sonido y la viñeta comparten ritmo.
+export const HEARTBEAT = 0.8;
 
 // Segundos que tarda un zombi normal en cruzar la pantalla en la oleada 1.
 export const CROSS_TIME = 18;
@@ -163,6 +190,18 @@ export const UPGRADES = {
   frenzy: {
     name: 'Frenesí', desc: 'Multiplicador máximo x7, pero cada fallo te resta 50 puntos.',
     max: 1, value: 2, cost: 50, rarity: 'cursed',
+  },
+};
+
+// Parejas de mejoras que, juntas, desbloquean un efecto extra. `value` es su efecto.
+export const SYNERGIES = {
+  pierce: { name: 'Perforante', needs: ['ricochet', 'heavy'], desc: 'Cada rebote arranca una letra más.', value: 1 },
+  absolute: {
+    name: 'Cero absoluto', needs: ['frost', 'scope'], desc: 'El zombi fijado avanza otro 25 % más lento.', value: 0.25,
+  },
+  nerves: { name: 'Nervios de acero', needs: ['focus', 'steady'], desc: 'Fallar ya no rompe la racha.', value: 1 },
+  mercenary: {
+    name: 'Mercenario', needs: ['bounty', 'bloodpact'], desc: 'Los zombis sueltan botín el doble de a menudo.', value: 2,
   },
 };
 

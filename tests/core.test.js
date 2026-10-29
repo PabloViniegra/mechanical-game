@@ -479,10 +479,10 @@ test('worstKey señala la letra esperada que más se falla', () => {
 
 test('el progreso descarta valores corruptos y guarda mejor y última marca', () => {
   assert.deepEqual(sanitizeProgress({ games: -1, bestWpm: 'x', lastWpm: 12, bestAccuracy: 400 }),
-    { games: 0, bestWpm: 0, lastWpm: 12, bestAccuracy: 100, history: [] });
+    { games: 0, bestWpm: 0, lastWpm: 12, bestAccuracy: 100, history: [], keys: {} });
   const first = recordProgress(EMPTY_PROGRESS, { wpm: 20, accuracy: 90 });
   const second = recordProgress(first, { wpm: 15, accuracy: 95 });
-  assert.deepEqual(second, { games: 2, bestWpm: 20, lastWpm: 15, bestAccuracy: 95, history: [] });
+  assert.deepEqual(second, { games: 2, bestWpm: 20, lastWpm: 15, bestAccuracy: 95, history: [], keys: {} });
   assert.equal(recordProgress(second, { wpm: 0, accuracy: 0 }), second);
 });
 

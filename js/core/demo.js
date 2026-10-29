@@ -37,6 +37,7 @@ export function createDemo() {
     hurtFlash: 0,
     missFlash: 0,
     muzzle: 0,
+    weak: [],
   };
 }
 

@@ -36,8 +36,8 @@ js/
 
 ## Patrones fijos
 
-- **Eventos, no dependencias.** `Game` notifica con `this.emit(nombre, datos)` y nunca llama a audio ni UI. `main.js` es el único que conecta eventos con `sfx` y `ui`. Eventos actuales: `change`, `wave`, `upgrade`, `over`, `revive`, `spawn`, `lock`, `shoot`, `miss`, `kill`, `hurt`, `grenade`, `part`, `shift`.
-- **Contrato de escena.** El renderer solo lee `{ zombies, effects, target, lives, maxLives, shake, hurtFlash, missFlash, muzzle }`. `Game` y `createDemo()` lo cumplen; si añades un campo, añádelo a ambos.
+- **Eventos, no dependencias.** `Game` notifica con `this.emit(nombre, datos)` y nunca llama a audio ni UI. `main.js` es el único que conecta eventos con `sfx` y `ui`. Eventos actuales: `change`, `wave`, `upgrade`, `over`, `revive`, `spawn`, `lock`, `shoot`, `miss`, `kill`, `hurt`, `grenade`, `ready`, `part`, `shift`, `loot`, `perfect`, `synergy`.
+- **Contrato de escena.** El renderer solo lee `{ zombies, effects, target, lives, maxLives, shake, hurtFlash, missFlash, muzzle, weak }`. `Game` y `createDemo()` lo cumplen; si añades un campo, añádelo a ambos.
 - **Coordenadas.** Todo `core/` trabaja en píxeles de arte (`view`). Solo el renderer multiplica por `view.scale` y `devicePixelRatio`.
 - **Tiempo.** `dt` en segundos y limitado en `main.js`. Los temporizadores decrecen con `Math.max(0, x - dt)`; nada depende de la tasa de fotogramas.
 - **Ajustes y textos.** Listas de palabras, dificultades y cualquier ajuste de equilibrio nuevo van en `data/config.js`. Los tiempos de animación locales (destellos, temblores) pueden quedarse junto a su uso.

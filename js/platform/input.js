@@ -8,7 +8,7 @@ export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, o
       if (!e.repeat) onEscape(state);
       return;
     }
-    if ((state === 'menu' || state === 'upgrade') && /^[1-3]$/.test(e.key)) {
+    if ((state === 'menu' || state === 'upgrade') && /^[1-9]$/.test(e.key)) {
       onDigit(state, Number(e.key) - 1);
       return;
     }

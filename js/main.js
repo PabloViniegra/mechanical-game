@@ -1,18 +1,19 @@
-import { DIFFICULTY_ORDER, VOLUME_MAX } from './data/config.js';
+import { DIFFICULTY_ORDER, VOLUME_MAX, SYNERGIES, HEARTBEAT } from './data/config.js';
 import { MAPS, mapIndex } from './data/maps.js';
 import { Game } from './core/game.js';
+import { isPickup } from './core/zombie.js';
 import { createDemo, updateDemo, setDemoMood } from './core/demo.js';
 import { clamp } from './core/utils.js';
 import { view } from './core/view.js';
 import { Renderer } from './render/renderer.js';
-import { createUI } from './platform/ui.js';
+import { createUI, keyName } from './platform/ui.js';
 import { bindKeyboard } from './platform/input.js';
 import { sfx, music, menuMusic, setAudio, onAudioUnlock } from './platform/audio.js';
 import {
   loadRecord, saveRecord, clearRecord, loadSettings, saveSettings, loadProgress, saveProgress,
 } from './platform/storage.js';
 import { sanitizeSettings } from './core/settings.js';
-import { EMPTY_PROGRESS, recordProgress } from './core/progress.js';
+import { EMPTY_PROGRESS, recordProgress, weakKeys } from './core/progress.js';
 
 // Raíz de composición: une lógica, render y navegador, y gestiona los estados.
 const renderer = new Renderer(document.getElementById('canvas'));
@@ -29,6 +30,7 @@ let progress = loadProgress();
 let previousProgress = progress;
 let lastRecord = false;
 let hudTimer = 0;
+let lastBeat = 0;
 const demo = createDemo();
 
 // Momentos de la partida que solo suenan.
@@ -43,6 +45,8 @@ const sounds = {
   ready: sfx.ready,
   part: sfx.part,
   shift: sfx.shift,
+  loot: sfx.loot,
+  perfect: sfx.perfect,
 };
 
 const ui = createUI({
@@ -64,7 +68,7 @@ const ui = createUI({
   },
   closePractice: () => {
     state = 'over';
-    ui.showGameOver(game, lastRecord, previousProgress);
+    ui.showGameOver(game, lastRecord, previousProgress, progress);
   },
   setOption,
   previewSfx: () => {
@@ -123,11 +127,12 @@ function startGame(key) {
   if (settings.difficulty !== key) setOption('difficulty', key);
   ui.setHudVisible(true);
   const seen = new Set();
+  let synergy = null;
   game = new Game(key, {
     ...sounds,
     // Presenta cada especial la primera vez que sale para que se aprenda su color.
     spawn: (z) => {
-      sounds.spawn();
+      if (!isPickup(z)) sounds.spawn();
       if (game?.guided || !z.type.hint || seen.has(z.kind)) return;
       seen.add(z.kind);
       ui.banner(z.type.name.toUpperCase(), z.type.hint);
@@ -136,10 +141,15 @@ function startGame(key) {
     wave: ({ wave, total, bonus, boss }, g) => {
       const changed = renderer.setMap(mapIndex(wave)) && wave > 1;
       let sub = `${total} zombis se acercan`;
-      if (wave === 1) sub = 'Escribe para disparar';
+      if (wave === 1) {
+        sub = g.weak.length ? `Entrenas: ${g.weak.map(keyName).join(', ')}` : 'Escribe para disparar';
+      }
       else if (boss) sub = 'Se acerca una abominación';
       else if (bonus) sub = `Superada +${bonus} · ${total} zombis`;
       if (changed) sub = `${MAPS[renderer.map].name} · ${sub}`;
+      // La sinergia recién activada ocupa el subtítulo: es lo que hay que celebrar.
+      if (synergy) sub = `Sinergia ${SYNERGIES[synergy].name}. ${SYNERGIES[synergy].desc}`;
+      synergy = null;
       ui.banner(boss ? `JEFE · OLEADA ${wave}` : `OLEADA ${wave}`, sub);
       ui.updateHud(g);
       sfx.wave();
@@ -149,12 +159,16 @@ function startGame(key) {
       ui.clearBanner();
       ui.showUpgrades(g, choices);
     },
+    synergy: (id) => {
+      synergy = id;
+      sfx.ready();
+    },
     revive: () => {
       ui.banner('SEGUNDA OPORTUNIDAD', 'La barricada aguanta');
       sfx.wave();
     },
     over: endGame,
-  }, { guided: settings.guided });
+  }, { guided: settings.guided, weak: weakKeys(progress) });
   state = 'playing';
   ui.setGuided(game.guided);
   ui.showScreen(null);
@@ -201,7 +215,7 @@ function endGame(_, g) {
   if (progress !== prev) saveProgress(progress);
   ui.setRecord(record, progress);
   setTimeout(() => {
-    if (state === 'over' && game === g) ui.showGameOver(g, isRecord, prev);
+    if (state === 'over' && game === g) ui.showGameOver(g, isRecord, prev, progress);
   }, 900);
 }
 
@@ -231,12 +245,13 @@ bindKeyboard({
     else if (s === 'paused') resume();
     else if (s === 'over') toMenu();
     else if (s === 'options') closeOptions();
-    else if (s === 'practice') { state = 'over'; ui.showGameOver(game, lastRecord, previousProgress); }
+    else if (s === 'practice') { state = 'over'; ui.showGameOver(game, lastRecord, previousProgress, progress); }
   },
   onOptions: openOptions,
   onDigit: (s, i) => {
-    if (s === 'menu') startGame(DIFFICULTY_ORDER[i]);
-    else if (game.offer?.[i]) chooseUpgrade(game.offer[i]);
+    if (s === 'menu') {
+      if (DIFFICULTY_ORDER[i]) startGame(DIFFICULTY_ORDER[i]);
+    } else if (game.offer?.[i]) chooseUpgrade(game.offer[i]);
   },
 });
 
@@ -260,6 +275,12 @@ function frame(now) {
   // Las opciones abiertas desde la pausa también congelan la partida.
   if (!game) updateDemo(demo, dt, { still: renderer.reducedMotion });
   else if (state !== 'paused' && state !== 'options') game.update(dt);
+
+  const tense = state === 'playing' && game.lives === 1;
+  music.setTension(tense);
+  const beat = Math.floor(now / 1000 / HEARTBEAT);
+  if (tense && beat !== lastBeat) sfx.heartbeat();
+  lastBeat = beat;
 
   if (state === 'playing') {
     if (game.guided) ui.updateGuided(game);

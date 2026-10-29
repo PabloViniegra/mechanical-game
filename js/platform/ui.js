@@ -1,6 +1,7 @@
-import { UPGRADES, RARITY, WORDS, ZOMBIE_TYPES, GUIDED } from '../data/config.js';
+import { UPGRADES, RARITY, WORDS, ZOMBIE_TYPES, GUIDED, SYNERGIES } from '../data/config.js';
 import { fold } from '../core/utils.js';
 import { practiceFeedback } from '../core/practice.js';
+import { trainingReport, weakKeys } from '../core/progress.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -27,6 +28,20 @@ function adviceText(game) {
   const key = space ? 'El espacio' : `La «${worst.key.toUpperCase()}»`;
   const times = worst.count === 1 ? 'vez' : 'veces';
   return `${key} te mordió ${worst.count} ${times}. Practíca${space ? 'lo' : 'la'} antes de volver.`;
+}
+
+export const keyName = (key) => key.toUpperCase();
+
+// Cómo han ido las letras entrenadas o, si no había, cuáles se entrenarán.
+// `prev` es el progreso anterior a la partida y `next` el ya guardado.
+function weakText(game, prev, next) {
+  if (game.guided) return '';
+  const report = trainingReport(prev, game);
+  if (report.length) {
+    return `Entrenamiento: ${report.map(({ key, before, now }) => `«${keyName(key)}» ${before} % → ${now} %`).join(' · ')}.`;
+  }
+  const keys = weakKeys(next);
+  return keys.length ? `Tus teclas débiles: ${keys.map(keyName).join(', ')}. La próxima partida las entrenará.` : '';
 }
 
 export function createUI(actions) {
@@ -58,6 +73,7 @@ export function createUI(actions) {
     newRecord: $('#new-record'),
     advice: $('#final-advice'),
     progress: $('#final-progress'),
+    weak: $('#final-weak'),
     bestWpm: $('#best-wpm'),
     bestWpmWrap: $('#best-wpm-wrap'),
     crt: $('.crt'),
@@ -258,6 +274,13 @@ export function createUI(actions) {
       if (describe) li.append(span('perk-desc', up.desc));
       return li;
     });
+    for (const id of game.synergies) {
+      const li = document.createElement('li');
+      li.className = 'perk synergy';
+      li.append(span('perk-name', SYNERGIES[id].name), span('perk-level', 'Sinergia'));
+      if (describe) li.append(span('perk-desc', SYNERGIES[id].desc));
+      items.push(li);
+    }
     if (!items.length) {
       const li = document.createElement('li');
       li.className = 'perk empty';
@@ -436,7 +459,10 @@ export function createUI(actions) {
       // La pantalla aparece mientras se teclea: un Enter (granada) o un clic que
       // ya venía en camino no debe gastar la elección sin haberla leído.
       upgradeArmedAt = performance.now() + UPGRADE_GUARD_MS;
-      el.upgradeBonus.textContent = `Oleada ${game.wave} · +${game.bonus} puntos`;
+      $('#upgrade-title').textContent = game.perfect ? 'Oleada perfecta' : 'Oleada superada';
+      el.upgradeBonus.textContent = game.perfect
+        ? `Bonus doble · +${game.bonus} puntos`
+        : `Oleada ${game.wave} · +${game.bonus} puntos`;
       const cards = choices.map((id, i) => {
         const up = UPGRADES[id];
         const rarity = up.rarity ?? 'common';
@@ -448,12 +474,10 @@ export function createUI(actions) {
         key.setAttribute('aria-hidden', 'true');
         const level = Number.isFinite(up.max) ? `Nivel ${game.level(id) + 1}/${up.max}` : 'Inmediata';
         const label = RARITY[rarity].label;
-        item.append(
-          key,
-          span('item-name', up.name),
-          span('item-meta', label ? `${label} · ${level}` : level),
-          span('item-desc', up.desc),
-        );
+        const meta = span('item-meta', label ? `${label} · ${level}` : level);
+        const synergies = game.completes(id).map((s) => SYNERGIES[s].name);
+        if (synergies.length) meta.append(span('item-synergy', `· Sinergia: ${synergies.join(', ')}`));
+        item.append(key, span('item-name', up.name), meta, span('item-desc', up.desc));
         item.addEventListener('click', () => {
           actions.upgrade(id);
         });
@@ -470,7 +494,7 @@ export function createUI(actions) {
       this.showScreen('pause');
     },
 
-    showGameOver(game, isRecord, prev) {
+    showGameOver(game, isRecord, prev, next) {
       $('#guided-result').classList.toggle('hidden', !game.guided);
       $('#history-details').classList.toggle('hidden', game.guided);
       el.newRecord.classList.toggle('hidden', !isRecord);
@@ -488,6 +512,9 @@ export function createUI(actions) {
       });
       el.progress.textContent = line;
       el.progress.classList.toggle('hidden', !line);
+      const weak = weakText(game, prev, next);
+      el.weak.textContent = weak;
+      el.weak.classList.toggle('hidden', !weak);
       const advice = adviceText(game);
       el.advice.textContent = advice;
       el.advice.classList.toggle('hidden', !advice);

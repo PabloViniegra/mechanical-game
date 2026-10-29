@@ -1,12 +1,15 @@
 import {
   DIFFICULTY, WORDS, ZOMBIE_TYPES, CROSS_TIME, COMBO_STEP, MAX_MULTIPLIER, BOSS, GRENADE,
   PHRASE_WAVE, PHRASE_CHANCE, UPGRADES, UPGRADE_CHOICES, RARITY, WAVES, GUIDED,
+  SYNERGIES, LOOT, PERFECT, WEAK_KEYS,
 } from '../data/config.js';
 import { PALETTE as C } from '../data/palette.js';
 import { view, gunTip } from './view.js';
 import { Effects } from './effects.js';
-import { createZombie, pickKind, pickWord, makePhrase, updateZombie, footY, chestY, reachedBarricade } from './zombie.js';
-import { rand, clamp, fold } from './utils.js';
+import {
+  createZombie, pickKind, pickWord, makePhrase, updateZombie, footY, chestY, reachedBarricade, isPickup,
+} from './zombie.js';
+import { rand, clamp, fold, pick, pickWeighted } from './utils.js';
 
 const BLOOD = [C.rust, C.blood];
 const GORE = [C.lichen, C.moss, C.rust, C.blood, C.bone];
@@ -16,11 +19,18 @@ const FIRE = [C.ember, C.flame, C.bone, C.slate];
 // Lógica de una partida, sin DOM ni audio. Notifica mediante callbacks:
 // change (estadísticas), wave ({ wave, total, bonus, boss }), upgrade (ids a elegir),
 // over, revive y los momentos sonoros spawn, lock, shoot, miss, kill, hurt,
-// grenade, ready (la granada se carga del todo), part (el jefe pierde una palabra) y shift (un mutante cambia de palabra).
+// grenade, ready (la granada se carga del todo), part (el jefe pierde una palabra),
+// shift (un mutante cambia de palabra), loot (se recoge una caja), perfect (oleada
+// sin fallos ni daño) y synergy (id de la sinergia que se acaba de activar).
+// `weak` son las letras débiles del jugador: salen más y puntúan más.
 export class Game {
-  constructor(diffKey, events = {}, { guided = false } = {}) {
+  constructor(diffKey, events = {}, { guided = false, weak = [] } = {}) {
     this.diffKey = diffKey;
     this.guided = guided;
+    this.weak = guided ? [] : weak;
+    // Palabras de cada lista con alguna letra débil; no cambian en toda la partida.
+    this.weakWords = Object.fromEntries(Object.entries(WORDS).map(([size, list]) =>
+      [size, list.filter((w) => this.weak.some((k) => fold(w).includes(k)))]));
     this.guidedMisses = 0;
     this.diff = DIFFICULTY[diffKey];
     this.events = events;
@@ -34,6 +44,7 @@ export class Game {
     this.misses = 0;
     // Fallos por letra esperada: el resumen final señala la que más cuesta.
     this.missedKeys = {};
+    this.hitKeys = {};
     this.kills = 0;
     this.time = 0;
     this.zombies = [];
@@ -55,6 +66,9 @@ export class Game {
     this.wireLeft = 0;
     this.revived = false;
     this.grenade = 0;
+    // Oleada en curso sin fallos ni daño, y si la última superada lo fue.
+    this.clean = true;
+    this.perfect = false;
   }
 
   start() {
@@ -116,6 +130,27 @@ export class Game {
     return this.level(id) * (UPGRADES[id].cost ?? 0);
   }
 
+  synergy(id) {
+    const { needs, value } = SYNERGIES[id];
+    return needs.every((n) => this.level(n) > 0) ? value : 0;
+  }
+
+  get synergies() {
+    return Object.keys(SYNERGIES).filter((id) => this.synergy(id));
+  }
+
+  // Sinergias que se activarían al elegir `id` por primera vez.
+  completes(id) {
+    if (this.level(id)) return [];
+    return Object.keys(SYNERGIES).filter((s) => SYNERGIES[s].needs.includes(id)
+      && SYNERGIES[s].needs.every((n) => n === id || this.level(n) > 0));
+  }
+
+  // Zombis vivos que pueden recibir rebotes y metralla; las cajas no.
+  get hostiles() {
+    return this.zombies.filter((z) => !z.dead && !z.gone && !isPickup(z));
+  }
+
   emit(name, data) {
     this.events[name]?.(data, this);
   }
@@ -127,6 +162,7 @@ export class Game {
     // En la oleada del jefe le acompaña la mitad de la horda.
     this.toSpawn = this.waveTotal = this.bossPending ? 1 + Math.floor(total / 2) : total;
     this.waveDone = 0;
+    this.clean = true;
     this.spawnTimer = this.guided ? 0 : WAVES.firstSpawn;
     this.wireLeft = this.perk('wire');
     this.lives = Math.min(this.maxLives, this.lives + this.perk('gravedigger'));
@@ -148,11 +184,17 @@ export class Game {
     }
     const kind = pickKind(this.wave);
     const phrase = kind === 'brute' && this.wave >= PHRASE_WAVE && Math.random() < PHRASE_CHANCE;
-    const word = phrase ? makePhrase(this.zombies) : pickWord(WORDS[ZOMBIE_TYPES[kind].words], this.zombies);
+    const word = phrase ? makePhrase(this.zombies) : pickWord(this.wordsFor(kind), this.zombies);
     const z = createZombie(kind, word, this.speedFor(kind));
     if (this.level('flare')) z.masked = false;
     this.zombies.push(z);
     this.emit('spawn', z);
+  }
+
+  wordsFor(kind) {
+    const size = ZOMBIE_TYPES[kind].words;
+    const weak = this.weakWords[size];
+    return weak.length && Math.random() < WEAK_KEYS.chance ? weak : WORDS[size];
   }
 
   // El jefe alterna frases y palabras largas; cada aparición trae una más.
@@ -188,6 +230,9 @@ export class Game {
     }
     if (z.folded[z.typed] !== c) return c === ' ' ? undefined : this.miss(z, c);
 
+    this.hitKeys[c] = (this.hitKeys[c] ?? 0) + 1;
+    // El premio por letra débil exige teclearla, no que la arranque un rebote.
+    if (this.weak.includes(c)) z.weakTyped = true;
     z.typed++;
     this.hits++;
     this.combo++;
@@ -209,16 +254,18 @@ export class Game {
     return z.typed >= z.folded.length - this.perk('autoload');
   }
 
-  // Palabra terminada: el jefe pasa a la siguiente; el resto muere.
+  // Palabra terminada: la caja se recoge, el jefe pasa a la siguiente y el resto muere.
   complete(z) {
-    if (z.parts && z.part < z.parts.length - 1) this.nextPart(z);
+    if (z.loot) this.collect(z);
+    else if (z.parts && z.part < z.parts.length - 1) this.nextPart(z);
     else this.kill(z);
   }
 
   miss(z, c) {
     this.misses++;
+    this.clean = false;
     // La racha que perdona la dificultad y la de sangre fría se acumulan.
-    const keep = 1 - (1 - this.diff.keep) * (1 - this.perk('focus'));
+    const keep = this.synergy('nerves') ? 1 : 1 - (1 - this.diff.keep) * (1 - this.perk('focus'));
     this.combo = Math.floor(this.combo * keep);
     this.score = Math.max(0, this.score - this.diff.cost - this.curse('frenzy'));
     this.missFlash = 0.15;
@@ -261,7 +308,7 @@ export class Game {
   }
 
   award(z) {
-    const gain = 1 + this.perk('bounty') + this.perk('bloodpact');
+    const gain = 1 + this.perk('bounty') + this.perk('bloodpact') + (z.weakTyped ? WEAK_KEYS.bonus : 0);
     const points = Math.round(z.word.length * 10 * this.multiplier * z.type.bonus * gain);
     this.score += points;
     this.effects.text(z.x, footY(z) - z.h - 4, `+${points}`, C.flame);
@@ -274,6 +321,7 @@ export class Game {
     z.word = z.parts[z.part];
     z.folded = fold(z.word);
     z.typed = 0;
+    z.weakTyped = false;
     z.x += BOSS.push;
     // Furia lineal: la velocidad base crece `rage` por palabra, no se compone.
     z.speed *= (1 + BOSS.rage * z.part) / (1 + BOSS.rage * (z.part - 1));
@@ -290,9 +338,7 @@ export class Game {
     this.kills++;
     this.waveDone++;
     this.award(z);
-    const wasReady = this.grenade >= 1;
-    this.grenade = Math.min(1, this.grenade + GRENADE.perKill * (1 + this.perk('fury')));
-    if (!wasReady && this.grenade >= 1) this.emit('ready');
+    this.charge(GRENADE.perKill * (1 + this.perk('fury')));
     // La racha se nota en el estallido: más salpicadura y, al máximo, chispas de brasa.
     const hot = this.multiplier >= this.maxMultiplier;
     this.effects.burst(z.x, chestY(z), {
@@ -305,6 +351,49 @@ export class Game {
     this.emit('kill', z);
     if (z.type.split) this.release(z, z.type.split);
     this.ricochet(z);
+    this.dropLoot(z);
+  }
+
+  charge(amount) {
+    const wasReady = this.grenade >= 1;
+    this.grenade = Math.min(1, this.grenade + amount);
+    if (!wasReady && this.grenade >= 1) this.emit('ready');
+  }
+
+  // Solo se sortean premios que sirvan ahora; sin tiempo límite no hay botín, y
+  // tras la última baja de la oleada la caja se perdería antes de poder escribirla.
+  dropLoot(from) {
+    if (this.guided || this.wave < LOOT.from) return;
+    if (this.toSpawn === 0 && !this.hostiles.length) return;
+    if (Math.random() >= LOOT.chance * (this.synergy('mercenary') || 1)) return;
+    const useful = Object.keys(LOOT.rewards).filter((id) =>
+      (id !== 'medkit' || this.lives < this.maxLives) && (id !== 'ammo' || this.grenade < 1));
+    const z = createZombie('crate', pickWord(WORDS.short, this.zombies), 0);
+    z.loot = pickWeighted(useful, (id) => LOOT.rewards[id].weight);
+    z.lifeT = LOOT.life;
+    // Lejos de la barricada para no confundirla con un zombi a punto de golpear,
+    // y del borde para que dé tiempo a leerla.
+    z.x = clamp(from.x, view.barricadeX + 30, view.w - 40);
+    z.lane = from.lane;
+    this.zombies.push(z);
+    this.emit('spawn', z);
+  }
+
+  collect(z) {
+    z.dead = true;
+    if (this.target === z) this.target = null;
+    const reward = LOOT.rewards[z.loot];
+    let label = reward.label;
+    if (z.loot === 'medkit') this.lives = Math.min(this.maxLives, this.lives + 1);
+    if (z.loot === 'ammo') this.charge(reward.value);
+    if (z.loot === 'cash') {
+      const points = Math.round(reward.value * this.multiplier);
+      this.score += points;
+      label = `+${points}`;
+    }
+    this.effects.text(z.x, footY(z) - z.h - 4, label, C.ember);
+    this.effects.burst(z.x, chestY(z), { count: 16, colors: SPLINTERS, force: 70, floorY: footY(z), stay: 3 });
+    this.emit('loot', z);
   }
 
   // Suelta `n` corredores desde el zombi; nunca encima de la barricada.
@@ -324,16 +413,16 @@ export class Game {
 
   // Arranca la siguiente letra a los zombis más cercanos al abatido.
   ricochet(from) {
-    const near = this.zombies
+    const near = this.hostiles
       // No toca el objetivo fijado para no mover la letra que el jugador espera.
-      .filter((z) => !z.dead && !z.gone && z !== this.target)
+      .filter((z) => z !== this.target)
       .sort((a, b) => Math.abs(a.x - from.x) - Math.abs(b.x - from.x))
       .slice(0, this.perk('ricochet'));
     for (const z of near) {
       if (z.dead) continue; // abatido por un rebote anterior en cadena
       this.effects.tracer(from.x, chestY(from), z.x, chestY(z));
       this.emit('shoot', z);
-      this.chip(z, 1);
+      this.chip(z, 1 + this.synergy('pierce'));
     }
   }
 
@@ -342,7 +431,7 @@ export class Game {
     this.grenade = 0;
     this.shake = 0.4;
     const letters = GRENADE.letters + this.perk('napalm');
-    for (const z of this.zombies.filter((o) => !o.dead && !o.gone)) {
+    for (const z of this.hostiles) {
       if (z.dead) continue; // abatido en cadena por un rebote
       this.effects.burst(z.x, chestY(z), { count: 14, colors: FIRE, force: 70, floorY: footY(z), stay: 1 });
       z.x += GRENADE.push;
@@ -358,6 +447,7 @@ export class Game {
     z.word = pickWord(WORDS[z.type.words], this.zombies.filter((o) => o !== z));
     z.folded = fold(z.word);
     z.typed = 0;
+    z.weakTyped = false;
     z.shiftT = z.type.shift;
     z.hit = 0.15;
     this.emit('shift', z);
@@ -383,6 +473,7 @@ export class Game {
 
   damage(z, amount) {
     this.lives -= amount;
+    this.clean = false;
     if (!this.level('steady')) this.combo = 0;
     this.shake = 0.4;
     this.hurtFlash = 0.35;
@@ -427,6 +518,12 @@ export class Game {
 
     for (const z of this.zombies) {
       updateZombie(z, dt, this.guided ? 0 : this.pace(z));
+      if (isPickup(z)) {
+        // Fijada no caduca: si no, las letras que faltan contarían como fallos.
+        if (!z.dead && z !== this.target) z.lifeT = Math.max(0, z.lifeT - dt);
+        if (z.lifeT === 0) this.expire(z);
+        continue;
+      }
       // El mutante solo cambia mientras nadie le apunta.
       if (!this.guided && z.type.shift && !z.dead && z !== this.target) {
         z.shiftT = Math.max(0, z.shiftT - dt);
@@ -438,21 +535,32 @@ export class Game {
     this.zombies = this.zombies.filter((z) => !z.gone && !(z.dead && z.deathT > 0.8));
     if (this.guided) this.selectGuidedTarget();
 
-    if (this.toSpawn === 0 && this.zombies.length === 0) {
-      this.bonus = this.wave * WAVES.bonus;
+    if (this.toSpawn === 0 && this.zombies.every(isPickup)) {
+      for (const z of this.zombies) this.expire(z);
+      this.zombies = [];
+      this.perfect = this.clean && this.waveDone > 0;
+      this.bonus = this.wave * WAVES.bonus * (this.perfect ? PERFECT.bonus : 1);
       this.score += this.bonus;
-      this.offer = this.rollUpgrades();
+      this.offer = this.rollUpgrades(this.perfect);
+      if (this.perfect) this.emit('perfect');
       this.emit('change');
       if (this.offer.length) this.emit('upgrade', this.offer);
       else this.choose(null);
     }
   }
 
+  expire(z) {
+    z.gone = true;
+    if (this.target === z) this.target = null;
+  }
+
   // Ralentización de mejoras que dependen del momento, no de la aparición.
   pace(z) {
-    const scope = z === this.target ? this.perk('scope') : 0;
+    const locked = z === this.target;
+    const scope = locked ? this.perk('scope') : 0;
+    const absolute = locked ? this.synergy('absolute') : 0;
     const rush = this.lives === 1 ? this.perk('adrenaline') : 0;
-    return (1 - scope) * (1 - rush);
+    return (1 - scope) * (1 - absolute) * (1 - rush);
   }
 
   canOffer(id) {
@@ -465,15 +573,17 @@ export class Game {
     return true;
   }
 
-  // Sorteo sin repetición ponderado por rareza.
-  rollUpgrades() {
+  // Sorteo sin repetición ponderado por rareza. Tras una oleada perfecta hay
+  // más cartas y la primera es rara si queda alguna.
+  rollUpgrades(perfect = false) {
     const pool = Object.keys(UPGRADES).filter((id) => this.canOffer(id));
+    const take = (id) => pool.splice(pool.indexOf(id), 1)[0];
     const picks = [];
-    while (picks.length < UPGRADE_CHOICES && pool.length) {
-      const weights = pool.map((id) => RARITY[UPGRADES[id].rarity ?? 'common'].weight);
-      let r = Math.random() * weights.reduce((a, b) => a + b, 0);
-      const i = weights.findIndex((w) => (r -= w) < 0);
-      picks.push(...pool.splice(i === -1 ? pool.length - 1 : i, 1));
+    const rare = pool.filter((id) => UPGRADES[id].rarity === 'rare');
+    if (perfect && rare.length) picks.push(take(pick(rare)));
+    const count = UPGRADE_CHOICES + (perfect ? PERFECT.extra : 0);
+    while (picks.length < count && pool.length) {
+      picks.push(take(pickWeighted(pool, (id) => RARITY[UPGRADES[id].rarity ?? 'common'].weight)));
     }
     return picks;
   }
@@ -481,6 +591,7 @@ export class Game {
   // Aplica la mejora elegida (null si no quedaba ninguna) y lanza la siguiente oleada.
   choose(id) {
     if (!this.offer || (id !== null && !this.offer.includes(id))) return;
+    const before = this.synergies;
     if (id) {
       this.perks[id] = this.level(id) + 1;
       if (id === 'armor') {
@@ -494,6 +605,7 @@ export class Game {
       if (id === 'repair') this.lives = this.maxLives;
     }
     this.offer = null;
+    for (const s of this.synergies) if (!before.includes(s)) this.emit('synergy', s);
     this.nextWave(this.bonus);
     this.emit('change');
   }

@@ -2,11 +2,12 @@ import { view, updateView, PLAYER_TIP } from '../core/view.js';
 import { SPRITES } from './sprites.js';
 import { paintBackground } from './background.js';
 import { MAPS } from '../data/maps.js';
-import { frameIndex, footY } from '../core/zombie.js';
+import { frameIndex, footY, isPickup } from '../core/zombie.js';
 import { line, pixelBox, ditherPattern } from './pixel.js';
 import { drawChar, drawText, textWidth, hasMarks } from './text.js';
 import { clamp, rand } from '../core/utils.js';
 import { ZOMBIE_ACCENTS, GLYPH_H, MARK_H } from '../data/art.js';
+import { LOOT, HEARTBEAT } from '../data/config.js';
 import { PALETTE as C } from '../data/palette.js';
 
 const COLORS = {
@@ -20,6 +21,7 @@ const COLORS = {
   tracer: C.flame,
   boss: C.rust,
   hidden: C.lichen,
+  weak: C.cold,
 };
 
 // Todo, textos incluidos, se dibuja a baja resolución en un búfer que se amplía
@@ -54,9 +56,10 @@ export class Renderer {
     return true;
   }
 
-  // scene: { zombies, effects, target, lives, maxLives, shake, hurtFlash, missFlash, muzzle }
+  // scene: { zombies, effects, target, lives, maxLives, shake, hurtFlash, missFlash, muzzle, weak }
   render(scene, t, { labels = false, shake = true } = {}) {
     const b = this.bctx;
+    this.weak = scene.weak;
     b.drawImage(this.bg, 0, 0);
     this.drawMist(b, t);
     this.drawBarricade(b, scene.lives / scene.maxLives);
@@ -233,7 +236,7 @@ export class Renderer {
     placed.push({ x, y, w: boxW, h: boxH });
     if (!draw) return;
 
-    const danger = z.x < view.barricadeX + (view.w - view.barricadeX) * 0.22;
+    const danger = !isPickup(z) && z.x < view.barricadeX + (view.w - view.barricadeX) * 0.22;
     const blink = this.reducedMotion || Math.floor(t * 6) % 2 === 0;
     const accent = ZOMBIE_ACCENTS[z.kind];
     let border = accent ?? COLORS.boxBorder;
@@ -256,6 +259,7 @@ export class Renderer {
       if (i < z.typed) color = COLORS.target;
       else if (isTarget && i === z.typed) color = z.shake > 0 ? COLORS.error : COLORS.next;
       else if (hide) color = COLORS.hidden;
+      else if (this.weak.includes(z.folded[i])) color = COLORS.weak;
       const w = drawChar(b, hide ? '?' : word[i], cx, ty, color);
       if (isTarget && i === z.typed) b.fillRect(cx, ty + GLYPH_H + 1, w, 1);
       cx += w + 1;
@@ -267,6 +271,24 @@ export class Renderer {
     if (z.type.shift && !isTarget) {
       b.fillStyle = accent;
       b.fillRect(x, y + boxH + 1, Math.round(boxW * (z.shiftT / z.type.shift)), 1);
+    }
+    if (isPickup(z)) {
+      b.fillStyle = accent;
+      b.fillRect(x, y + boxH + 1, Math.round(boxW * (z.lifeT / LOOT.life)), 1);
+    }
+  }
+
+  // Bordes en penumbra con la última vida; laten al ritmo del corazón salvo
+  // que se pida menos movimiento.
+  drawVignette(b, t) {
+    const beat = !this.reducedMotion && t % HEARTBEAT < 0.12 ? 3 : 0;
+    const { w, h } = view;
+    for (const [d, density] of [[14 + beat, 0.25], [6 + beat, 0.5]]) {
+      b.fillStyle = ditherPattern(b, C.ink, density);
+      b.fillRect(0, 0, w, d);
+      b.fillRect(0, h - d, w, d);
+      b.fillRect(0, d, d, h - d * 2);
+      b.fillRect(w - d, d, d, h - d * 2);
     }
   }
 
@@ -295,6 +317,7 @@ export class Renderer {
   }
 
   drawFlashes(b, scene, t) {
+    if (scene.lives === 1) this.drawVignette(b, t);
     if (scene.hurtFlash > 0 && !this.reducedMotion) {
       b.fillStyle = ditherPattern(b, C.rust, scene.hurtFlash * 1.5);
       b.fillRect(0, 0, view.w, view.h);

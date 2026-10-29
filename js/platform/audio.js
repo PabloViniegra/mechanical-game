@@ -80,6 +80,20 @@ export const sfx = {
   },
   part() { noise(0.25, 0.35, 400); tone(110, 0.4, 'square', 0.12, -60); },
   shift() { tone(300, 0.18, 'triangle', 0.05, 500); },
+  loot() {
+    tone(880, 0.06, 'square', 0.06);
+    tone(1320, 0.12, 'square', 0.06, 0, 0.07);
+  },
+  perfect() {
+    tone(523, 0.1, 'square', 0.07);
+    tone(659, 0.1, 'square', 0.07, 0, 0.1);
+    tone(784, 0.1, 'square', 0.07, 0, 0.2);
+    tone(1047, 0.3, 'square', 0.07, 0, 0.3);
+  },
+  heartbeat() {
+    tone(62, 0.12, 'sine', 0.3, -20);
+    tone(55, 0.16, 'sine', 0.24, -20, 0.16);
+  },
   groan() { tone(rand(65, 95), 0.7, 'sawtooth', 0.035, -25); },
   wave() {
     tone(440, 0.12, 'square', 0.07);
@@ -93,6 +107,9 @@ export const sfx = {
 };
 
 const MUSIC_VOLUME = 0.35;
+// Con la última vida el tema se acelera sin cambiar de tono.
+const TENSE_RATE = 1.12;
+let tense = false;
 
 // La música va en <audio> y no en Web Audio: decodificar el tema entero
 // ocuparía decenas de MB en memoria.
@@ -174,7 +191,13 @@ export const music = {
     t.play()?.catch(() => {});
   },
   pause() { track?.pause(); },
+  setTension(on) {
+    if (on === tense || !track) return;
+    tense = on;
+    track.playbackRate = on ? TENSE_RATE : 1;
+  },
   stop() {
+    this.setTension(false);
     if (!track) return;
     track.pause();
     track.currentTime = 0;
