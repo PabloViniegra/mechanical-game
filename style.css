@@ -505,6 +505,18 @@ kbd {
   color: var(--salmon);
 }
 
+#practice-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: var(--u) 0;
+  padding: calc(var(--u) * 2);
+  color: var(--bone);
+  background: var(--ink);
+  border: 2px solid var(--slate);
+  font: inherit;
+}
+
 /* Opciones */
 .options {
   display: grid;

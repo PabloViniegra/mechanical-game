@@ -108,7 +108,7 @@
           Escribe la palabra de un zombi para dispararle; la primera letra fija el objetivo.
           Las tildes son opcionales. <kbd>Enter</kbd> granada · <kbd>Esc</kbd> pausa
         </p>
-        <p class="record">Récord <strong id="record">000000</strong><span id="best-wpm-wrap" class="hidden"> · PPM máx <strong id="best-wpm">0</strong></span></p>
+        <p class="record">Récord <strong id="record">000000</strong><span id="best-wpm-wrap" class="hidden"> · PPM máx global <strong id="best-wpm">0</strong></span></p>
       </div>
     </section>
 
@@ -174,7 +174,7 @@
 
         <div class="menu" data-menu>
           <button type="button" class="item" id="options-back"><span class="item-name">Volver</span></button>
-          <button type="button" class="item danger" id="reset-record"><span class="item-name">Borrar récord</span></button>
+          <button type="button" class="item danger" id="reset-record"><span class="item-name">Borrar récord y progreso</span></button>
         </div>
         <p class="hint"><kbd>Esc</kbd> para volver</p>
       </div>
@@ -203,14 +203,28 @@
           <div><dt>Mejor racha</dt><dd id="final-combo">0</dd></div>
         </dl>
         <p id="final-progress" class="progress hidden"></p>
+        <p id="final-history" class="hint"></p>
         <p id="final-advice" class="advice hidden"></p>
+        <p class="hint">PPM: aciertos divididos entre cinco y el tiempo de partida, incluidas las esperas; excluye pausas y mejoras.</p>
         <h3 class="section-title">Mejoras</h3>
         <ul id="over-perks" class="perk-list"></ul>
         <div class="menu" data-menu>
           <button type="button" class="item" id="retry" data-autofocus><span class="item-name">Reintentar</span></button>
+          <button type="button" class="item hidden" id="practice-start"><span class="item-name">Practicar letra difícil</span></button>
           <button type="button" class="item" id="menu"><span class="item-name">Menú</span></button>
         </div>
         <p class="hint"><kbd>Enter</kbd> reintentar · <kbd>Esc</kbd> menú</p>
+      </div>
+    </section>
+    <section id="screen-practice" class="overlay hidden" aria-labelledby="practice-title">
+      <div class="panel">
+        <h2 id="practice-title" class="screen-title">Practica tu letra</h2>
+        <p class="hint">Escribe estas palabras, separadas por espacios. Las tildes son opcionales.</p>
+        <p id="practice-words" class="progress"></p>
+        <label for="practice-input">Tu práctica</label>
+        <input id="practice-input" type="text" autocomplete="off" spellcheck="false" data-autofocus>
+        <p id="practice-status" class="hint" aria-live="polite"></p>
+        <div class="menu"><button type="button" class="item" id="practice-back">Volver al resumen</button></div>
       </div>
     </section>
   </main>

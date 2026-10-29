@@ -5,7 +5,7 @@ export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, o
   window.addEventListener('keydown', (e) => {
     const state = getState();
     if (e.key === 'Escape') {
-      onEscape(state);
+      if (!e.repeat) onEscape(state);
       return;
     }
     if ((state === 'menu' || state === 'upgrade') && /^[1-3]$/.test(e.key)) {
@@ -22,6 +22,8 @@ export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, o
       return;
     }
     if (state !== 'playing') return;
+    if (e.target?.closest?.('input, select, textarea, [contenteditable="true"]')) return;
+    if ((e.key === 'Enter' || e.key === ' ') && e.target?.closest?.('button')) return;
     if (e.key === 'Enter') {
       e.preventDefault();
       onGrenade();

@@ -1,4 +1,5 @@
-import { UPGRADES, RARITY } from '../data/config.js';
+import { UPGRADES, RARITY, WORDS } from '../data/config.js';
+import { fold } from '../core/utils.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -12,8 +13,8 @@ function progressText(wpm, prev) {
   const delta = wpm - prev.lastWpm;
   const vs = delta === 0 ? 'Igual que la anterior'
     : `${Math.abs(delta)} ${delta > 0 ? 'más' : 'menos'} que la anterior`;
-  if (wpm > prev.bestWpm) return `¡Tu mejor PPM! ${vs}.`;
-  return `Tu mejor marca: ${prev.bestWpm} PPM · ${vs}.`;
+  if (wpm > prev.bestWpm) return `¡Mejor PPM del historial! ${vs}.`;
+  return `Mejor PPM del historial: ${prev.bestWpm} · ${vs}.`;
 }
 
 // Convierte el fallo más repetido en algo que practicar la próxima vez.
@@ -67,6 +68,7 @@ export function createUI(actions) {
       upgrade: $('#screen-upgrade'),
       options: $('#screen-options'),
       over: $('#screen-over'),
+      practice: $('#screen-practice'),
     },
     upgradeBonus: $('#upgrade-bonus'),
     upgradeChoices: $('#upgrade-choices'),
@@ -87,6 +89,15 @@ export function createUI(actions) {
   $('#quit').addEventListener('click', actions.menu);
   $('#retry').addEventListener('click', actions.retry);
   $('#menu').addEventListener('click', actions.menu);
+  $('#practice-start').addEventListener('click', actions.practice);
+  $('#practice-back').addEventListener('click', actions.closePractice);
+  const practiceInput = $('#practice-input');
+  practiceInput.addEventListener('input', () => {
+    const expected = $('#practice-words').textContent;
+    const value = fold(practiceInput.value);
+    const status = $('#practice-status');
+    status.textContent = value === fold(expected) ? '¡Práctica completada!' : fold(expected).startsWith(value) ? '' : 'Revisa lo escrito.';
+  });
   document.querySelectorAll('[data-open-options]').forEach((btn) => {
     btn.addEventListener('click', actions.openOptions);
   });
@@ -111,7 +122,7 @@ export function createUI(actions) {
   let resetArmed = false;
   const disarmReset = () => {
     resetArmed = false;
-    el.resetRecord.textContent = 'Borrar récord';
+    el.resetRecord.textContent = 'Borrar récord y progreso';
   };
   el.resetRecord.addEventListener('click', () => {
     if (!resetArmed) {
@@ -132,7 +143,8 @@ export function createUI(actions) {
     const menu = document.activeElement?.closest('[data-menu]');
     if (!menu) return;
     e.preventDefault();
-    const items = [...menu.querySelectorAll('button:not(:disabled)')];
+    const items = [...menu.querySelectorAll('button:not(:disabled)')].filter((item) => item.getClientRects().length);
+    if (!items.length) return;
     const step = e.key === 'ArrowDown' ? 1 : -1;
     const i = items.indexOf(document.activeElement);
     items[(i + step + items.length) % items.length].focus();
@@ -198,7 +210,17 @@ export function createUI(actions) {
     list.replaceChildren(...items);
   }
 
+  let upgradeArmedAt = 0;
   return {
+    upgradeReady() { return performance.now() >= upgradeArmedAt; },
+    showPractice(game) {
+      const key = game.worstKey?.key;
+      const words = Object.values(WORDS).flat().filter((word) => key && fold(word).includes(key)).slice(0, 5);
+      $('#practice-words').textContent = words.length ? words.join(' ') : 'cadáver podrido mano hambrienta';
+      practiceInput.value = '';
+      $('#practice-status').textContent = '';
+      this.showScreen('practice');
+    },
     showScreen(name) {
       for (const [key, screen] of Object.entries(el.screens)) screen.classList.toggle('hidden', key !== name);
       const screen = el.screens[name];
@@ -301,7 +323,7 @@ export function createUI(actions) {
     showUpgrades(game, choices) {
       // La pantalla aparece mientras se teclea: un Enter (granada) o un clic que
       // ya venía en camino no debe gastar la elección sin haberla leído.
-      const armedAt = performance.now() + UPGRADE_GUARD_MS;
+      upgradeArmedAt = performance.now() + UPGRADE_GUARD_MS;
       el.upgradeBonus.textContent = `Oleada ${game.wave} · +${game.bonus} puntos`;
       const cards = choices.map((id, i) => {
         const up = UPGRADES[id];
@@ -321,7 +343,7 @@ export function createUI(actions) {
           span('item-desc', up.desc),
         );
         item.addEventListener('click', () => {
-          if (performance.now() >= armedAt) actions.upgrade(id);
+          actions.upgrade(id);
         });
         return item;
       });
@@ -342,12 +364,21 @@ export function createUI(actions) {
       el.final.accuracy.textContent = `${game.accuracy}%`;
       el.final.wpm.textContent = game.wpm;
       el.final.combo.textContent = game.maxCombo;
-      const line = progressText(game.wpm, prev);
+      const comparable = prev.history.filter((entry) => entry.difficulty === game.diffKey);
+      const line = progressText(game.wpm, {
+        games: comparable.length,
+        lastWpm: comparable.at(-1)?.wpm ?? 0,
+        bestWpm: Math.max(0, ...comparable.map((entry) => entry.wpm)),
+      });
       el.progress.textContent = line;
       el.progress.classList.toggle('hidden', !line);
       const advice = adviceText(game);
       el.advice.textContent = advice;
       el.advice.classList.toggle('hidden', !advice);
+      $('#practice-start').classList.toggle('hidden', !game.worstKey);
+      const history = [...comparable.slice(-4), ...(game.wpm ? [{ wpm: game.wpm, accuracy: game.accuracy, duration: Math.round(game.time) }] : [])];
+      $('#final-history').textContent = history.length
+        ? `Últimas partidas en ${game.diffKey}: ${history.map((entry) => `${entry.wpm} PPM · ${entry.accuracy} % · ${entry.duration} s`).join(' / ')}` : '';
       renderPerks(el.overPerks, game);
       this.showScreen('over');
     },

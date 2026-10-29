@@ -30,7 +30,9 @@ export class Renderer {
     this.buffer = document.createElement('canvas');
     this.bctx = this.buffer.getContext('2d');
     this.bg = document.createElement('canvas');
-    this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const motion = matchMedia('(prefers-reduced-motion: reduce)');
+    this.reducedMotion = motion.matches;
+    motion.addEventListener('change', (event) => { this.reducedMotion = event.matches; });
   }
 
   resize() {
@@ -56,8 +58,10 @@ export class Renderer {
     if (scene.target) this.drawReticle(b, scene.target, t);
     this.drawEffects(b, scene.effects, t);
     if (labels) {
-      for (const z of ordered) if (!z.dead && z !== scene.target) this.drawLabel(b, z, false, t);
-      if (scene.target) this.drawLabel(b, scene.target, true, t);
+      const placed = [];
+      if (scene.target) this.drawLabel(b, scene.target, true, t, placed, false);
+      for (const z of ordered) if (!z.dead && z !== scene.target) this.drawLabel(b, z, false, t, placed);
+      if (scene.target) this.drawLabel(b, scene.target, true, t, []);
       this.drawFlashes(b, scene, t);
     }
 
@@ -128,10 +132,10 @@ export class Renderer {
   drawZombie(b, z) {
     const spr = SPRITES.zombies[z.kind];
     const f = frameIndex(z);
-    const flash = z.hit > 0 || (z.dead && z.deathT < 0.1);
+    const flash = !this.reducedMotion && (z.hit > 0 || (z.dead && z.deathT < 0.1));
     const img = flash ? spr.flash[f] : spr.frames[f];
     let x = Math.round(z.x - spr.w / 2);
-    if (z.shake > 0) x += Math.floor(z.shake * 40) % 2 ? 1 : -1;
+    if (z.shake > 0 && !this.reducedMotion) x += Math.floor(z.shake * 40) % 2 ? 1 : -1;
     const fy = footY(z);
 
     this.drawShadow(b, x + 3, fy - 1, spr.w - 6);
@@ -191,7 +195,7 @@ export class Renderer {
     }
   }
 
-  drawLabel(b, z, isTarget, t) {
+  drawLabel(b, z, isTarget, t, placed, draw = true) {
     // Caja: borde 1, margen 1, [signos], letra, fila del cursor, margen 1, borde 1.
     const word = z.word;
     const marks = hasMarks(word) ? MARK_H : 0;
@@ -204,8 +208,21 @@ export class Renderer {
 
     let x = Math.round(z.x - boxW / 2);
     x = clamp(x, 1, view.w - boxW - 1);
-    if (z.shake > 0) x += Math.floor(z.shake * 40) % 2 ? 1 : -1;
-    const y = footY(z) - z.h - 3 - boxH - pointer;
+    if (z.shake > 0 && !this.reducedMotion) x += Math.floor(z.shake * 40) % 2 ? 1 : -1;
+    let y = footY(z) - z.h - 3 - boxH - pointer;
+    // Desplaza hacia arriba las etiquetas que se pisan, priorizando el objetivo.
+    let previous;
+    do {
+      previous = y;
+      for (const other of placed) {
+        if (x < other.x + other.w && x + boxW > other.x && y < other.y + other.h && y + boxH > other.y) {
+          y = other.y - boxH - 2;
+        }
+      }
+    } while (y !== previous);
+    y = Math.max(1, y);
+    placed.push({ x, y, w: boxW, h: boxH });
+    if (!draw) return;
 
     const danger = z.x < view.barricadeX + (view.w - view.barricadeX) * 0.22;
     const blink = this.reducedMotion || Math.floor(t * 6) % 2 === 0;
@@ -269,13 +286,13 @@ export class Renderer {
   }
 
   drawFlashes(b, scene, t) {
-    if (scene.hurtFlash > 0) {
+    if (scene.hurtFlash > 0 && !this.reducedMotion) {
       b.fillStyle = ditherPattern(b, C.rust, scene.hurtFlash * 1.5);
       b.fillRect(0, 0, view.w, view.h);
     }
     // Marco rojo al fallar o, parpadeando, con la última vida.
     const lastLife = scene.lives === 1 && (this.reducedMotion || Math.floor(t * 3) % 2 === 0);
-    if (scene.missFlash > 0 || lastLife) {
+    if ((!this.reducedMotion && scene.missFlash > 0) || lastLife) {
       const { w, h } = view;
       b.fillStyle = COLORS.danger;
       b.fillRect(0, 0, w, 2);

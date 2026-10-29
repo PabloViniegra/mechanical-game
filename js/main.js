@@ -17,13 +17,15 @@ import { EMPTY_PROGRESS, recordProgress } from './core/progress.js';
 const renderer = new Renderer(document.getElementById('canvas'));
 renderer.resize();
 
-let state = 'menu'; // menu | playing | paused | upgrade | over | options
+let state = 'menu'; // menu | playing | paused | upgrade | over | options | practice
 let optionsFrom = 'menu'; // estado al que vuelve la pantalla de opciones
 let game = null;
 let settings = loadSettings();
 let diffKey = settings.difficulty;
 let record = loadRecord();
 let progress = loadProgress();
+let previousProgress = progress;
+let lastRecord = false;
 let hudTimer = 0;
 const demo = createDemo();
 
@@ -50,6 +52,14 @@ const ui = createUI({
   toggleMute: () => setOption('muted', !settings.muted),
   openOptions,
   closeOptions,
+  practice: () => {
+    state = 'practice';
+    ui.showPractice(game);
+  },
+  closePractice: () => {
+    state = 'over';
+    ui.showGameOver(game, lastRecord, previousProgress);
+  },
   setOption,
   previewSfx: () => {
     sfx.ensure();
@@ -135,7 +145,7 @@ function startGame(key) {
 }
 
 function chooseUpgrade(id) {
-  if (state !== 'upgrade') return;
+  if (state !== 'upgrade' || !ui.upgradeReady()) return;
   state = 'playing';
   ui.showScreen(null);
   game.choose(id);
@@ -158,11 +168,13 @@ function endGame(_, g) {
   music.stop();
   sfx.gameOver();
   const isRecord = g.score > record;
+  lastRecord = isRecord;
   if (isRecord) {
     record = g.score;
     saveRecord(record);
   }
   const prev = progress;
+  previousProgress = prev;
   progress = recordProgress(prev, g);
   if (progress !== prev) saveProgress(progress);
   ui.setRecord(record, progress);
@@ -189,6 +201,7 @@ bindKeyboard({
     else if (s === 'paused') resume();
     else if (s === 'over') toMenu();
     else if (s === 'options') closeOptions();
+    else if (s === 'practice') { state = 'over'; ui.showGameOver(game, lastRecord, previousProgress); }
   },
   onOptions: openOptions,
   onDigit: (s, i) => {
