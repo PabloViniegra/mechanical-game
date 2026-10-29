@@ -7,7 +7,7 @@ import { view } from './core/view.js';
 import { Renderer } from './render/renderer.js';
 import { createUI } from './platform/ui.js';
 import { bindKeyboard } from './platform/input.js';
-import { sfx, music, setAudio } from './platform/audio.js';
+import { sfx, music, menuMusic, setAudio, onAudioUnlock } from './platform/audio.js';
 import {
   loadRecord, saveRecord, clearRecord, loadSettings, saveSettings, loadProgress, saveProgress,
 } from './platform/storage.js';
@@ -108,8 +108,17 @@ function closeOptions() {
   else ui.showScreen('start');
 }
 
+function inMenu() {
+  return state === 'menu' || (state === 'options' && optionsFrom === 'menu');
+}
+
+onAudioUnlock(() => {
+  if (inMenu() && !document.hidden) menuMusic.start();
+});
+
 function startGame(key) {
   sfx.ensure();
+  menuMusic.stop();
   diffKey = key;
   if (settings.difficulty !== key) setOption('difficulty', key);
   ui.setHudVisible(true);
@@ -201,6 +210,7 @@ function toMenu() {
   game = null;
   renderer.setMap(0);
   music.stop();
+  menuMusic.start();
   ui.setHudVisible(false);
   ui.setGuided(false);
   ui.clearBanner();
@@ -232,6 +242,9 @@ bindKeyboard({
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && state === 'playing') pause();
+  // En segundo plano los temporizadores se ralentizan y el secuenciador tartamudearía.
+  if (document.hidden) menuMusic.pause();
+  else if (inMenu()) menuMusic.start();
 });
 window.addEventListener('resize', () => {
   renderer.resize();
