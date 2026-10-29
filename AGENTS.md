@@ -63,3 +63,13 @@ js/
 - Los tests viven en `tests/` y solo importan de `data/` y `core/`.
 - Prueba comportamiento observable (puntos, vidas, eventos emitidos), no detalles internos.
 - Un bug corregido en `core/` lleva un test que lo reproduce.
+
+<!-- graphify:start -->
+## Graphify
+
+- Global agent instructions take precedence over this generated guidance.
+- Use Graphify for cross-file relationship or impact questions when an existing graph is available. Direct reads are appropriate for known files and small scoped edits.
+- From the repository root, use `python -m graphify query "<question>" --budget 800`, `path`, `explain`, or `affected` as appropriate.
+- If the graph is missing, stale, or unhelpful, use direct search. Do not repeat an unavailable-graph check within the same task.
+- Build, update, or install Graphify only when requested or when graph maintenance is part of the task.
+<!-- graphify:end -->
