@@ -275,6 +275,9 @@ export class Game {
     z.folded = fold(z.word);
     z.typed = 0;
     z.x += BOSS.push;
+    // Furia lineal: la velocidad base crece `rage` por palabra, no se compone.
+    z.speed *= (1 + BOSS.rage * z.part) / (1 + BOSS.rage * (z.part - 1));
+    this.release(z, BOSS.minions, { reserved: z.parts.slice(z.part + 1), gap: BOSS.minionGap });
     if (this.target === z) this.target = null;
     this.shake = 0.25;
     this.emit('part', z);
@@ -300,16 +303,17 @@ export class Game {
       stay: 5,
     });
     this.emit('kill', z);
-    if (z.type.split) this.split(z);
+    if (z.type.split) this.release(z, z.type.split);
     this.ricochet(z);
   }
 
-  // Revienta en corredores; nunca encima de la barricada.
-  split(z) {
-    const n = z.type.split;
-    const x = Math.max(z.x, view.barricadeX + 40);
+  // Suelta `n` corredores desde el zombi; nunca encima de la barricada.
+  // `reserved` son palabras aún por salir del jefe: sus iniciales deben seguir libres.
+  // `gap` es la distancia mínima a la barricada.
+  release(z, n, { reserved = [], gap = 40 } = {}) {
+    const x = Math.max(z.x, view.barricadeX + gap);
     for (let i = 0; i < n; i++) {
-      const child = createZombie('runner', pickWord(WORDS.short, this.zombies), this.speedFor('runner'));
+      const child = createZombie('runner', pickWord(WORDS.short, this.zombies, reserved), this.speedFor('runner'));
       child.x = x + i * 10;
       child.lane = clamp(z.lane + (i - (n - 1) / 2) * 0.3, 0, 1);
       this.zombies.push(child);

@@ -101,7 +101,9 @@ export const ZOMBIE_TYPES = {
 
 // Jefe cada `every` oleadas: `parts` palabras en la primera aparición y una más
 // en cada siguiente. Al llegar a la barricada quita `damage` vidas y retrocede `knockback`.
-export const BOSS = { every: 5, parts: 3, damage: 2, knockback: 60, push: 14 };
+// Cada palabra completada lo enfurece (`rage`: velocidad extra por palabra) y suelta
+// `minions` corredores, nunca a menos de `minionGap` de la barricada.
+export const BOSS = { every: 5, parts: 3, damage: 2, knockback: 60, push: 14, rage: 0.15, minions: 2, minionGap: 120 };
 
 // La granada se carga con `perKill` por zombi abatido y quita `letters` letras
 // a todos los zombis en pantalla.

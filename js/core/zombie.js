@@ -20,13 +20,17 @@ export function pickKind(wave) {
 }
 
 // Evita palabras repetidas y, si es posible, iniciales que ya estén en pantalla.
-export function pickWord(list, zombies) {
+export function pickWord(list, zombies, reserved = []) {
   const alive = zombies.filter((z) => !z.dead);
   const used = new Set(alive.map((z) => z.word));
-  const initials = new Set(alive.map((z) => z.folded[0]));
+  const held = new Set(reserved.map((w) => fold(w)[0]));
+  const initials = new Set([...alive.map((z) => z.folded[0]), ...held]);
   const fresh = list.filter((w) => !used.has(w));
   const distinct = fresh.filter((w) => !initials.has(fold(w)[0]));
-  return pick(distinct.length ? distinct : fresh.length ? fresh : list);
+  const pool = distinct.length ? distinct : fresh.length ? fresh : list;
+  // Las iniciales reservadas se respetan aunque no quede ninguna inicial libre.
+  const safe = pool.filter((w) => !held.has(fold(w)[0]));
+  return pick(safe.length ? safe : pool);
 }
 
 // Frase «sustantivo + adjetivo» con el adjetivo concordado en género.

@@ -267,6 +267,27 @@ test('cada cinco oleadas aparece un jefe con varias palabras', () => {
   assert.deepEqual(kills, ['boss']);
 });
 
+test('cada palabra del jefe lo enfurece y suelta corredores', () => {
+  const game = new Game('normal');
+  game.wave = 4;
+  game.nextWave(0);
+  game.spawn();
+  const boss = game.zombies[0];
+  const speed = boss.speed;
+  const total = game.waveTotal;
+  typeWord(game, boss.parts[0]);
+  const once = boss.speed;
+  assert.ok(once > speed);
+  const runners = game.zombies.filter((z) => z.kind === 'runner');
+  assert.equal(runners.length, 2);
+  assert.equal(game.waveTotal, total + 2);
+  const initials = runners.map((r) => r.folded[0]);
+  for (const w of boss.parts.slice(1)) assert.ok(!initials.includes(fold(w)[0]));
+  // La furia es lineal: la segunda palabra suma lo mismo que la primera.
+  typeWord(game, boss.parts[1]);
+  assert.ok(Math.abs((boss.speed - once) - (once - speed)) < 1e-9);
+});
+
 test('la vida del jefe baja con cada palabra y desaparece al abatirlo', () => {
   const game = new Game('normal');
   assert.equal(game.bossHealth, null);
