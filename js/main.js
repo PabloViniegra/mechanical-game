@@ -1,4 +1,5 @@
 import { DIFFICULTY_ORDER, VOLUME_MAX } from './data/config.js';
+import { MAPS, mapIndex } from './data/maps.js';
 import { Game } from './core/game.js';
 import { createDemo, updateDemo, setDemoMood } from './core/demo.js';
 import { clamp } from './core/utils.js';
@@ -124,10 +125,12 @@ function startGame(key) {
     },
     change: (_, g) => ui.updateHud(g),
     wave: ({ wave, total, bonus, boss }, g) => {
+      const changed = renderer.setMap(mapIndex(wave)) && wave > 1;
       let sub = `${total} zombis se acercan`;
       if (wave === 1) sub = 'Escribe para disparar';
       else if (boss) sub = 'Se acerca una abominación';
       else if (bonus) sub = `Superada +${bonus} · ${total} zombis`;
+      if (changed) sub = `${MAPS[renderer.map].name} · ${sub}`;
       ui.banner(boss ? `JEFE · OLEADA ${wave}` : `OLEADA ${wave}`, sub);
       ui.updateHud(g);
       sfx.wave();
@@ -196,6 +199,7 @@ function endGame(_, g) {
 function toMenu() {
   state = 'menu';
   game = null;
+  renderer.setMap(0);
   music.stop();
   ui.setHudVisible(false);
   ui.setGuided(false);

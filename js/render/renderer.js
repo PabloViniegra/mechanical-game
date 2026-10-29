@@ -1,6 +1,7 @@
 import { view, updateView, PLAYER_TIP } from '../core/view.js';
 import { SPRITES } from './sprites.js';
 import { paintBackground } from './background.js';
+import { MAPS } from '../data/maps.js';
 import { frameIndex, footY } from '../core/zombie.js';
 import { line, pixelBox, ditherPattern } from './pixel.js';
 import { drawChar, drawText, textWidth, hasMarks } from './text.js';
@@ -30,6 +31,7 @@ export class Renderer {
     this.buffer = document.createElement('canvas');
     this.bctx = this.buffer.getContext('2d');
     this.bg = document.createElement('canvas');
+    this.map = 0;
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     this.reducedMotion = motion.matches;
     motion.addEventListener('change', (event) => { this.reducedMotion = event.matches; });
@@ -42,7 +44,14 @@ export class Renderer {
     this.canvas.height = Math.round(window.innerHeight * this.dpr);
     this.buffer.width = view.w;
     this.buffer.height = view.h;
-    paintBackground(this.bg);
+    paintBackground(this.bg, MAPS[this.map]);
+  }
+
+  setMap(index) {
+    if (index === this.map) return false;
+    this.map = index;
+    paintBackground(this.bg, MAPS[index]);
+    return true;
   }
 
   // scene: { zombies, effects, target, lives, maxLives, shake, hurtFlash, missFlash, muzzle }
@@ -82,7 +91,7 @@ export class Renderer {
   }
 
   drawMist(b, t) {
-    b.fillStyle = ditherPattern(b, C.moss, 0.25);
+    b.fillStyle = ditherPattern(b, MAPS[this.map].mist, 0.25);
     const band = (view.h - view.horizon) / 4;
     for (let i = 0; i < 4; i++) {
       const w = 80 + i * 24;
