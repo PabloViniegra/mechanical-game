@@ -1,0 +1,10 @@
+# Solo se publica el juego: HTML, CSS, js/ y assets/
+graphify-out
+tests
+.impeccable
+.mcp.json
+opencode.json
+AGENTS.md
+DESIGN.md
+PRODUCT.md
+.graphifyignore

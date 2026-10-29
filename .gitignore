@@ -1,3 +1,6 @@
 /node_modules/
 /.impeccable/critique/
 graphify-out/
+.vercel
+.mcp.json
+opencode.json
