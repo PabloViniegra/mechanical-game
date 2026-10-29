@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T00:00:00Z",
+  "title": "Design System: Apocalipsis QWERTY",
+  "extensions": {
+    "colorMeta": {
+      "ember": { "role": "primary", "displayName": "Brasa", "canonical": "#e0892e", "tonalRamp": ["#5a1a1c", "#a8382a", "#e0892e", "#f5cf5a"] },
+      "rust": { "role": "secondary", "displayName": "Óxido", "canonical": "#a8382a", "tonalRamp": ["#0d0f0e", "#5a1a1c", "#a8382a", "#e07a5f"] },
+      "salmon": { "role": "secondary", "displayName": "Salmón", "canonical": "#e07a5f", "tonalRamp": ["#5a1a1c", "#a8382a", "#e07a5f", "#e8dfc4"] },
+      "blood": { "role": "secondary", "displayName": "Sangre", "canonical": "#5a1a1c", "tonalRamp": ["#0d0f0e", "#5a1a1c", "#a8382a", "#e07a5f"] },
+      "sick": { "role": "tertiary", "displayName": "Enfermizo", "canonical": "#b8bd6a", "tonalRamp": ["#2e3b36", "#4a5a45", "#7a8a5a", "#b8bd6a", "#e8dfc4"] },
+      "lichen": { "role": "tertiary", "displayName": "Liquen", "canonical": "#7a8a5a", "tonalRamp": ["#1b2321", "#2e3b36", "#4a5a45", "#7a8a5a", "#b8bd6a"] },
+      "flame": { "role": "tertiary", "displayName": "Llama", "canonical": "#f5cf5a", "tonalRamp": ["#a8382a", "#e0892e", "#f5cf5a", "#e8dfc4"] },
+      "cold": { "role": "tertiary", "displayName": "Frío", "canonical": "#6c9aa8", "tonalRamp": ["#1b2321", "#2e3b36", "#6c9aa8", "#e8dfc4"] },
+      "ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#0d0f0e", "tonalRamp": ["#0d0f0e", "#1b2321", "#2e3b36", "#4a5a45", "#7a8a5a", "#b8bd6a", "#e8dfc4"] },
+      "night": { "role": "neutral", "displayName": "Noche", "canonical": "#1b2321", "tonalRamp": ["#0d0f0e", "#1b2321", "#2e3b36", "#4a5a45"] },
+      "slate": { "role": "neutral", "displayName": "Pizarra", "canonical": "#2e3b36", "tonalRamp": ["#0d0f0e", "#1b2321", "#2e3b36", "#4a5a45", "#7a8a5a"] },
+      "moss": { "role": "neutral", "displayName": "Musgo", "canonical": "#4a5a45", "tonalRamp": ["#1b2321", "#2e3b36", "#4a5a45", "#7a8a5a", "#b8bd6a"] },
+      "bone": { "role": "neutral", "displayName": "Hueso", "canonical": "#e8dfc4", "tonalRamp": ["#3e3229", "#6e5b44", "#b89a78", "#e8dfc4"] },
+      "dust": { "role": "neutral", "displayName": "Polvo", "canonical": "#b89a78", "tonalRamp": ["#3e3229", "#6e5b44", "#b89a78", "#e8dfc4"] },
+      "earth": { "role": "neutral", "displayName": "Tierra", "canonical": "#3e3229", "tonalRamp": ["#0d0f0e", "#3e3229", "#6e5b44", "#b89a78"] },
+      "mud": { "role": "neutral", "displayName": "Barro", "canonical": "#6e5b44", "tonalRamp": ["#3e3229", "#6e5b44", "#b89a78", "#e8dfc4"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Solo «QWERTY» del logo, con relieve óxido → sangre → tinta." },
+      "headline": { "displayName": "Headline", "purpose": "Títulos de pantalla, carteles de oleada y opciones del menú principal." },
+      "title": { "displayName": "Title", "purpose": "Opciones de menú en paneles, valores del HUD, multiplicador." },
+      "body": { "displayName": "Body", "purpose": "VT323 para ayuda, descripciones, metadatos y etiquetas de opciones." },
+      "label": { "displayName": "Label", "purpose": "Etiquetas del HUD, títulos de sección, kbd, valores de opción, chips." }
+    },
+    "shadows": [
+      { "name": "relieve-logo", "value": "0 var(--u) 0 var(--rust), 0 calc(var(--u) * 2) 0 var(--blood), 0 calc(var(--u) * 3) 0 var(--ink)", "purpose": "text-shadow del logo; sin desenfoque." },
+      { "name": "relieve-cartel", "value": "0 var(--u) 0 var(--rust), 0 calc(var(--u) * 2) 0 var(--ink)", "purpose": "text-shadow de los carteles de oleada." },
+      { "name": "anillo-panel", "value": "0 0 0 var(--u) var(--ink)", "purpose": "Separa el marco hueso del panel de la partida." }
+    ],
+    "motion": [
+      { "name": "meter-step", "value": "width 0.25s steps(5)", "purpose": "Cambio de ancho de las barras de progreso." },
+      { "name": "pulse", "value": "0.6s steps(2) infinite", "purpose": "Parpadeo de granada lista y multiplicador caliente (0.8s en nuevo récord)." },
+      { "name": "heart-lost", "value": "0.6s steps(6)", "purpose": "Corazón perdido: destello y rebote por pasos." },
+      { "name": "banner", "value": "2.6s steps(13) forwards", "purpose": "Entrada y salida del cartel de oleada; con movimiento reducido solo funde." }
+    ],
+    "breakpoints": [
+      { "name": "narrow", "value": "860px" },
+      { "name": "compact", "value": "560px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Elemento de menú",
+      "kind": "button",
+      "refersTo": "menu-item",
+      "description": "Opción de menú en texto plano; el foco muestra la flecha-cursor brasa.",
+      "html": "<div class=\"ds-menu\"><button class=\"ds-item\"><span class=\"ds-item-key\">1</span><span class=\"ds-item-name\">Fácil</span></button><button class=\"ds-item\"><span class=\"ds-item-key\">2</span><span class=\"ds-item-name\">Normal</span></button><button class=\"ds-item ds-danger\"><span class=\"ds-item-key\">3</span><span class=\"ds-item-name\">Pesadilla</span></button></div>",
+      "css": ".ds-menu { display: grid; gap: 4px; padding-left: 28px; background: #0d0f0e; } .ds-item { position: relative; display: flex; align-items: baseline; gap: 12px; padding: 6px 0; font: inherit; text-align: left; color: var(--bone, #e8dfc4); background: none; border: 0; cursor: pointer; } .ds-item::before { content: ''; position: absolute; left: -28px; top: 50%; width: 16px; height: 28px; background: var(--ember, #e0892e); clip-path: polygon(0 0, 25% 0, 25% 14%, 50% 14%, 50% 29%, 75% 29%, 75% 43%, 100% 43%, 100% 57%, 75% 57%, 75% 71%, 50% 71%, 50% 86%, 25% 86%, 25% 100%, 0 100%); transform: translateY(-50%); visibility: hidden; } .ds-item:hover::before, .ds-item:focus-visible::before { visibility: visible; } .ds-item:focus-visible { outline: none; } .ds-item-key { min-width: 24px; font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 8px; color: var(--dust, #b89a78); } .ds-item-name { font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 16px; line-height: 1.3; } .ds-danger .ds-item-name { color: var(--salmon, #e07a5f); } .ds-item:hover .ds-item-name, .ds-item:focus-visible .ds-item-name { color: var(--ember, #e0892e); }"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Cuadro de diálogo de consola para pausa, opciones, mejoras y game over.",
+      "html": "<section class=\"ds-panel\"><h2 class=\"ds-screen-title\">Pausa</h2><h3 class=\"ds-section-title\">Mejoras</h3><p class=\"ds-hint\">Esc para continuar</p></section>",
+      "css": ".ds-panel { width: min(600px, 100%); padding: 24px 28px; color: var(--bone, #e8dfc4); background: var(--ink, #0d0f0e); border: 4px solid var(--bone, #e8dfc4); box-shadow: 0 0 0 4px var(--ink, #0d0f0e); } .ds-screen-title { margin: 0 0 20px; font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 32px; font-weight: 400; line-height: 1.2; } .ds-section-title { margin: 20px 0 8px; font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 16px; font-weight: 400; text-transform: uppercase; color: var(--dust, #b89a78); } .ds-hint { margin: 20px 0 0; font-family: VT323, ui-monospace, monospace; font-size: 20px; color: var(--dust, #b89a78); }"
+    },
+    {
+      "name": "Fila de opción (interruptor)",
+      "kind": "custom",
+      "refersTo": "option-row",
+      "description": "Interruptor de opciones con valor a la derecha y separador pizarra.",
+      "html": "<button class=\"ds-option\" aria-pressed=\"true\"><span>Filtro CRT</span><span class=\"ds-option-value\">Sí</span></button>",
+      "css": ".ds-option { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 44px; padding: 4px 12px; font-family: VT323, ui-monospace, monospace; font-size: 20px; text-align: left; color: var(--bone, #e8dfc4); background: var(--ink, #0d0f0e); border: 0; border-bottom: 2px solid var(--slate, #2e3b36); cursor: pointer; } .ds-option > span:first-child { flex: 1; } .ds-option-value { font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 16px; color: var(--ember, #e0892e); } .ds-option[aria-pressed='false'] .ds-option-value { color: var(--dust, #b89a78); } .ds-option:hover { background: var(--night, #1b2321); } .ds-option:focus-visible { outline: 2px solid var(--ember, #e0892e); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botones segmentados",
+      "kind": "chip",
+      "refersTo": "segmented-button",
+      "description": "Selector de dificultad; el activo se invierte a tinta sobre hueso.",
+      "html": "<div class=\"ds-segmented\"><button aria-pressed=\"false\">Fácil</button><button aria-pressed=\"true\">Normal</button><button aria-pressed=\"false\">Pesadilla</button></div>",
+      "css": ".ds-segmented { display: flex; gap: 4px; padding: 8px; background: var(--ink, #0d0f0e); } .ds-segmented button { flex: 1 1 0; min-height: 44px; padding: 4px; font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 16px; color: var(--dust, #b89a78); background: none; border: 2px solid var(--slate, #2e3b36); cursor: pointer; } .ds-segmented button:hover { color: var(--bone, #e8dfc4); } .ds-segmented button[aria-pressed='true'] { color: var(--ink, #0d0f0e); background: var(--bone, #e8dfc4); border-color: var(--bone, #e8dfc4); } .ds-segmented button:focus-visible { outline: 2px solid var(--ember, #e0892e); outline-offset: 2px; }"
+    },
+    {
+      "name": "Bloque de HUD con barra",
+      "kind": "custom",
+      "refersTo": "meter",
+      "description": "Etiqueta en mayúsculas con número dinámico y barra de progreso por pasos.",
+      "html": "<div class=\"ds-hud\"><div class=\"ds-hud-block\"><span class=\"ds-hud-label\">Oleada <span>3</span></span><div class=\"ds-meter\"><div class=\"ds-meter-fill\"></div></div></div><div class=\"ds-hud-block\"><span class=\"ds-hud-label\">Puntos</span><span class=\"ds-hud-value\">004250</span></div></div>",
+      "css": ".ds-hud { display: flex; align-items: center; gap: 20px; padding: 8px 16px; background: var(--ink, #0d0f0e); border-bottom: 4px solid var(--slate, #2e3b36); } .ds-hud-block { display: flex; flex-direction: column; gap: 6px; } .ds-hud-label { font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 8px; text-transform: uppercase; color: var(--dust, #b89a78); } .ds-hud-label span { color: var(--bone, #e8dfc4); } .ds-hud-value { font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 16px; color: var(--ember, #e0892e); } .ds-meter { width: 120px; height: 12px; padding: 2px; background: var(--night, #1b2321); } .ds-meter-fill { width: 60%; height: 100%; background: var(--lichen, #7a8a5a); transition: width 0.25s steps(5); } .ds-meter:hover .ds-meter-fill { width: 80%; }"
+    },
+    {
+      "name": "Tecla",
+      "kind": "custom",
+      "refersTo": "kbd",
+      "description": "Nombre de una tecla real en ayudas y HUD.",
+      "html": "<p class=\"ds-kbd-row\"><kbd class=\"ds-kbd\">Enter</kbd> granada · <kbd class=\"ds-kbd\">Esc</kbd> pausa</p>",
+      "css": ".ds-kbd-row { margin: 0; padding: 8px; font-family: VT323, ui-monospace, monospace; font-size: 20px; color: var(--dust, #b89a78); background: var(--ink, #0d0f0e); } .ds-kbd { display: inline-block; min-width: 1.8em; padding: 2px 4px; font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 8px; line-height: 1; text-align: center; color: var(--bone, #e8dfc4); background: var(--night, #1b2321); border: 2px solid var(--slate, #2e3b36); }"
+    },
+    {
+      "name": "Logo",
+      "kind": "custom",
+      "refersTo": "display",
+      "description": "Marca de la pantalla de título con relieve de píxel en capas.",
+      "html": "<h1 class=\"ds-logo\"><span class=\"ds-logo-top\">Apocalipsis</span><span class=\"ds-logo-main\">QWERTY</span></h1>",
+      "css": ".ds-logo { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 16px; font-family: 'Press Start 2P', ui-monospace, monospace; font-weight: 400; line-height: 1; text-transform: uppercase; background: var(--ink, #0d0f0e); } .ds-logo-top { font-size: 16px; letter-spacing: 0.5em; color: var(--dust, #b89a78); } .ds-logo-main { font-size: 64px; color: var(--bone, #e8dfc4); text-shadow: 0 4px 0 var(--rust, #a8382a), 0 8px 0 var(--blood, #5a1a1c), 0 12px 0 var(--ink, #0d0f0e); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Recreativa del fin del mundo",
+    "overview": "Una máquina arcade de los 80 que sigue encendida en un búnker cuando todo lo demás se ha apagado. El fósforo es hueso sobre negro tinta, la ceniza es el polvo de las etiquetas y el único calor es el naranja brasa del cursor, la puntuación y lo que exige atención ya. Todo es pixel art honesto: cada medida es un múltiplo del píxel de arte (`--u`), que `main.js` sincroniza con la escala entera del canvas para que HUD, paneles y sprites compartan la misma rejilla.\n\nLa interfaz es táctil y crujiente. No se desliza ni rebota: cambia por pasos (`steps()`), como hardware viejo que responde con un clic. Los paneles son cuadros de diálogo de consola con marco hueso, los menús son texto plano con una flecha-cursor, y la profundidad la dan desplazamientos sólidos de píxel, nunca desenfoques. La densidad es la de una recreativa: el HUD es una franja fina arriba y el campo de batalla manda.\n\nSe rechaza explícitamente la UI moderna: radios, degradados suaves, sombras difusas, glassmorphism y animaciones con easing elástico rompen la ilusión de máquina.",
+    "keyCharacteristics": [
+      "Paleta cerrada de 16 colores compartida por sprites, fondo, efectos y CSS.",
+      "Todo medido en píxeles de arte (`--u`), escalado por enteros.",
+      "Esquinas siempre rectas; bordes de un píxel de arte o medio.",
+      "Movimiento por pasos (`steps()`), nunca interpolación suave.",
+      "Naranja brasa reservado para foco, valor activo y urgencia."
+    ],
+    "rules": [
+      { "name": "The Closed Palette Rule", "body": "Ningún color fuera de `js/data/palette.js` entra en sprites, efectos ni CSS (los tests lo comprueban). Si hace falta un tono nuevo, se sustituye uno; no se añade.", "section": "colors" },
+      { "name": "The One Ember Rule", "body": "La brasa marca lo que importa ahora mismo: foco, valor activo, urgencia. Si dos cosas compiten en naranja en la misma pantalla, una sobra.", "section": "colors" },
+      { "name": "The Multiple-of-Eight Rule", "body": "Press Start 2P solo se usa a 8, 16, 32 o 64 px (y sus múltiplos de 8). Cualquier otro tamaño emborrona el píxel.", "section": "typography" },
+      { "name": "The No-Bold Rule", "body": "Peso 400 siempre. La jerarquía se marca con tamaño, color y mayúsculas; las negritas sintéticas destruyen el pixel art.", "section": "typography" },
+      { "name": "The Zero-Blur Rule", "body": "Ninguna sombra lleva radio de desenfoque. Si hay profundidad, es un píxel sólido desplazado.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do medir todo en múltiplos de `--u` y dejar que escale con el canvas.",
+      "Do animar con `steps()` y duraciones cortas (0.25–0.8s); el movimiento es un clic, no un deslizamiento.",
+      "Do reservar la brasa para foco, valor activo y urgencia.",
+      "Do usar Press Start 2P solo en múltiplos de 8 px y siempre a peso 400.",
+      "Do dibujar iconos nuevos como SVG de píxel con `crispEdges` y colores de la paleta.",
+      "Do desactivar parpadeos y desplazamientos bajo `prefers-reduced-motion` y respetar las opciones de temblor y CRT.",
+      "Do mantener objetivos de 44px mínimo en controles clicables."
+    ],
+    "donts": [
+      "Don't redondear esquinas, ni siquiera 1px.",
+      "Don't usar degradados suaves, sombras con desenfoque, `backdrop-filter` ni glassmorphism.",
+      "Don't usar easing elástico, `ease-in-out` o transiciones interpoladas de posición o escala.",
+      "Don't introducir colores fuera de la paleta de 16, ni tonos intermedios «para matizar».",
+      "Don't usar negritas ni tamaños de Press Start 2P que no sean múltiplos de 8.",
+      "Don't convertir los elementos de menú en botones con caja; el cursor-flecha es la affordance."
+    ]
+  }
+}
