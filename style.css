@@ -282,6 +282,9 @@ kbd {
 
 .screen-title.dead { color: var(--salmon); }
 
+/* El título de game over cae de golpe y rebota en un solo paso. */
+#screen-over:not(.hidden) .screen-title.dead { animation: slam 0.5s steps(5) 1; }
+
 .section-title {
   margin: calc(var(--u) * 5) 0 calc(var(--u) * 2);
   font-family: var(--pixel);
@@ -320,6 +323,7 @@ kbd {
   font-size: min(var(--fs-xl), 14vw);
   color: var(--bone);
   text-shadow: 0 var(--u) 0 var(--rust), 0 calc(var(--u) * 2) 0 var(--blood), 0 calc(var(--u) * 3) 0 var(--ink);
+  animation: sign-flicker 7s steps(1) infinite;
 }
 
 .howto {
@@ -655,6 +659,21 @@ kbd {
 
 .hud.no-stats .stat { display: none; }
 
+/* Rótulo medio fundido: se apaga dos veces y vuelve. */
+@keyframes sign-flicker {
+  0%, 100% { opacity: 1; }
+  91% { opacity: 0.35; }
+  92% { opacity: 1; }
+  93% { opacity: 0.35; }
+  95% { opacity: 1; }
+}
+
+@keyframes slam {
+  0% { transform: translateY(calc(var(--u) * -6)); }
+  60% { transform: translateY(calc(var(--u) * 1)); }
+  100% { transform: none; }
+}
+
 @keyframes pulse {
   50% { opacity: 0.45; }
 }
@@ -704,7 +723,7 @@ kbd {
 
 @media (prefers-reduced-motion: reduce) {
   .mult.hot, .new-record, .hud-block.ready .meter { animation: none; }
-  .heart.lost { animation: none; }
+  .heart.lost, .logo-main, #screen-over:not(.hidden) .screen-title.dead { animation: none; }
   .banner.show { animation-name: banner-fade; }
   @keyframes banner-fade {
     0%, 100% { opacity: 0; }

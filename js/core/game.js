@@ -290,7 +290,15 @@ export class Game {
     const wasReady = this.grenade >= 1;
     this.grenade = Math.min(1, this.grenade + GRENADE.perKill * (1 + this.perk('fury')));
     if (!wasReady && this.grenade >= 1) this.emit('ready');
-    this.effects.burst(z.x, chestY(z), { count: 26, colors: GORE, force: 90, floorY: footY(z), stay: 5 });
+    // La racha se nota en el estallido: más salpicadura y, al máximo, chispas de brasa.
+    const hot = this.multiplier >= this.maxMultiplier;
+    this.effects.burst(z.x, chestY(z), {
+      count: 26 + Math.min(this.multiplier - 1, 4) * 4,
+      colors: hot ? [...GORE, C.ember, C.flame] : GORE,
+      force: 90 + (hot ? 20 : 0),
+      floorY: footY(z),
+      stay: 5,
+    });
     this.emit('kill', z);
     if (z.type.split) this.split(z);
     this.ricochet(z);
