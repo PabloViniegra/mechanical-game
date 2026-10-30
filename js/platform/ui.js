@@ -426,7 +426,6 @@ export function createUI(actions) {
       describeReset();
     },
 
-    // Refleja las opciones en sus controles y en lo que dependen de ellas.
     setOptions(settings) {
       for (const control of el.optionControls) {
         const value = settings[control.dataset.option];
@@ -443,8 +442,8 @@ export function createUI(actions) {
       el.crt.classList.toggle('hidden', !settings.crt);
       el.hud.classList.toggle('no-stats', !settings.stats);
       $('#mode-description').textContent = settings.guided
-        ? 'Modo guiado activado: objetivos en texto, sin límite de tiempo ni récords arcade. Elige una dificultad para empezar.'
-        : 'Para jugar sin presión de tiempo y con objetivos en texto, activa el modo guiado en Opciones.';
+        ? 'Modo guiado activado. Elige una dificultad para empezar.'
+        : 'Modo guiado disponible en Opciones.';
       // El menú enfoca la dificultad elegida para empezar con Enter.
       document.querySelectorAll('[data-diff]').forEach((card) => {
         card.toggleAttribute('data-autofocus', card.dataset.diff === settings.difficulty);
@@ -456,7 +455,6 @@ export function createUI(actions) {
       el.mute.setAttribute('aria-label', muted ? 'Activar sonido' : 'Silenciar sonido');
     },
 
-    // `choices` son ids de UPGRADES; el clic llama a actions.upgrade(id).
     showUpgrades(game, choices) {
       // La pantalla aparece mientras se teclea: un Enter (granada) o un clic que
       // ya venía en camino no debe gastar la elección sin haberla leído.
@@ -499,6 +497,7 @@ export function createUI(actions) {
     showGameOver(game, isRecord, prev, next) {
       $('#guided-result').classList.toggle('hidden', !game.guided);
       $('#history-details').classList.toggle('hidden', game.guided);
+      $('#history-help').classList.toggle('hidden', game.guided);
       el.newRecord.classList.toggle('hidden', !isRecord);
       el.final.score.textContent = game.score;
       el.final.wave.textContent = game.wave;

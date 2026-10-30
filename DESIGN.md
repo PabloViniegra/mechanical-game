@@ -165,9 +165,9 @@ Una paleta terrosa y enfermiza de 16 tonos: verdes de musgo y liquen, hueso y po
 Los tamaños derivan de `--u` (valores a `--u: 4px`); los de Press Start 2P se redondean a múltiplos de 8 px.
 
 ### Hierarchy
-- **Display** (400, 64px, 1): «QWERTY» del logo, con sombra en capas óxido → sangre → tinta. Se limita a 14vw en ventanas estrechas.
+- **Display** (400, 64px, 1): «QWERTY» del logo, con sombra en capas óxido → sangre → tinta. Se limita a 14vw, redondeado hacia abajo a múltiplos de 8px, para que el cursor quepa en la misma línea.
 - **Headline** (400, 32px, 1.2): títulos de pantalla («Pausa», «Opciones», «Te han devorado»), carteles de oleada y opciones del menú principal.
-- **Title** (400, 16px, 1.3): opciones de menú en paneles, valores del HUD (precisión y PPM incluidos), multiplicador, línea superior del logo (espaciado 0.5em), títulos de sección, datos del resumen final, valores de opción, botones segmentados, «¡Nuevo récord!» y la línea de récord y PPM máx. Todo dato que el jugador quiera comparar entre partidas va aquí, nunca a 8px.
+- **Title** (400, 16px, 1.3): opciones de menú en paneles, valores del HUD (precisión y PPM incluidos), multiplicador, línea superior del logo (espaciado de hasta 0.5em, limitado a 1vw), títulos de sección, datos del resumen final, valores de opción, botones segmentados, «¡Nuevo récord!» y la línea de récord y PPM máx. Todo dato que el jugador quiera comparar entre partidas va aquí, nunca a 8px.
 - **Body** (400, 20px, 1.15): VT323 para ayuda, descripciones de mejoras, metadatos y etiquetas de opciones. Ancho máximo 38em. En pantallas de 560px o menos, mínimo 18px.
 - **Label** (400, 8px, mayúsculas): etiquetas del HUD, teclas de atajo, `kbd` y chips de mejora.
 
@@ -184,7 +184,7 @@ Las pantallas superpuestas centran su contenido con `margin: auto` dentro de un 
 
 El ritmo es un múltiplo de `--u`: 1u entre filas de menú y opciones, 2–3u en bloques internos, 5–6u entre secciones, 8–10u bajo el logo. No hay valores fuera de la rejilla salvo los mínimos de 44px de los objetivos táctiles.
 
-**Responsive:** a 860px o menos el HUD pasa a dos columnas y oculta precisión/PPM. A 560px o menos el HUD fluye en varias filas, las barras se acortan, el resumen pasa a una columna y los menús ocultan las teclas de atajo. Es escritorio primero: el móvil se muestra legible, no se diseña como objetivo.
+**Responsive:** a 860px o menos el HUD pasa a dos columnas y oculta precisión/PPM. A 560px o menos el HUD fluye en varias filas, las barras se acortan, el resumen pasa a una columna y los menús ocultan las teclas de atajo, salvo los números de las mejoras. Las filas de volumen sitúan etiqueta y valor encima del deslizador. Es escritorio primero: el móvil se muestra legible, no se diseña como objetivo.
 
 ## Elevation & Depth
 
@@ -220,7 +220,7 @@ Cuadro de diálogo de consola.
 
 ### Mejoras, ayuda y escritura
 - **Oferta de mejoras:** nombre en su propia fila; rareza y nivel juntos debajo; descripción con interlineado 1.4. El atajo ocupa una columna aparte en escritorio y desaparece en estrecho.
-- **Ayuda:** bloques nativos `details` en pausa y resumen, con foco brasa visible. Los efectos adquiridos se consultan con su descripción, no solo con el nombre.
+- **Ayuda:** bloques nativos `details` en pausa y resumen, con foco brasa visible. Los efectos adquiridos se consultan con su descripción, no solo con el nombre. La fórmula de PPM y los límites del historial van en una ayuda desplegable después de las acciones del resumen.
 - **Texto explicativo:** instrucciones, ayudas y descripciones usan interlineado 1.4 para facilitar la lectura.
 - **Escritura:** campos nativos de esquinas rectas, hueso sobre tinta, borde pizarra y foco brasa. Los errores añaden texto que indica la primera posición incorrecta, además del borde salmón.
 - **Modo guiado:** superficie tinta desplazable con objetivo y siguiente carácter en texto, entrada etiquetada y estado anunciado. Conserva la tipografía y los controles de la recreativa; no impone un límite de tiempo.

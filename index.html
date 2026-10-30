@@ -77,7 +77,7 @@
 
     <section id="guided-play" class="guided-play hidden" aria-labelledby="guided-title">
       <h2 id="guided-title" class="section-title">Partida guiada</h2>
-      <p id="guided-help">Sin límite de tiempo. Escribe una letra cada vez; las tildes son opcionales. Cada tres fallos pierdes una vida. Este modo no guarda récords arcade.</p>
+      <p id="guided-help">Sin límite de tiempo. Escribe una letra cada vez; las tildes son opcionales. Cada tres fallos pierdes una vida.</p>
       <p id="guided-target" class="progress"></p>
       <p id="guided-status" role="status" aria-atomic="true"></p>
       <label for="guided-input">Escribe la siguiente letra</label>
@@ -122,7 +122,7 @@
           Escribe la palabra de un zombi para dispararle; la primera letra fija el objetivo.
           Las tildes son opcionales. <kbd>Enter</kbd> granada · <kbd>Esc</kbd> pausa
         </p>
-        <p class="hint" id="mode-description">Para jugar sin presión de tiempo y con objetivos en texto, activa el modo guiado en Opciones.</p>
+        <p class="hint" id="mode-description">Modo guiado disponible en Opciones.</p>
         <p class="record">Récord <strong id="record">000000</strong><span id="best-wpm-wrap" class="hidden"> · PPM máx global <strong id="best-wpm">0</strong></span></p>
       </div>
     </section>
@@ -213,7 +213,7 @@
         <p id="upgrade-bonus" class="record upgrade-bonus"></p>
         <h3 class="section-title">Elige una mejora</h3>
         <div id="upgrade-choices" class="menu" role="group" aria-label="Mejoras" data-menu></div>
-        <p class="hint">Pulsa el número de una carta para elegirla · <kbd>Esc</kbd> pausa</p>
+        <p class="hint">Elige con flechas y <kbd>Enter</kbd>, o pulsa un número · <kbd>Esc</kbd> pausa</p>
         <div class="menu"><button type="button" class="item" id="upgrade-pause"><span class="item-name">Pausa y ayuda</span></button></div>
       </div>
     </section>
@@ -222,7 +222,7 @@
       <div class="panel">
         <h2 id="over-title" class="screen-title dead">Te han devorado</h2>
         <p id="new-record" class="new-record hidden">¡Nuevo récord!</p>
-        <p id="guided-result" class="hint hidden">Partida guiada: resultados de esta sesión, separados del récord arcade.</p>
+        <p id="guided-result" class="hint hidden">Resultados del modo guiado.</p>
         <dl class="summary">
           <div><dt>PPM</dt><dd id="final-wpm">0</dd></div>
           <div><dt>Precisión</dt><dd id="final-accuracy">0%</dd></div>
@@ -237,9 +237,7 @@
         <details class="help" id="history-details">
           <summary id="history-title">Últimas partidas</summary>
           <ol id="final-history"></ol>
-          <p>Comparación por dificultad con hasta 20 partidas anteriores guardadas. Se muestran hasta cinco, incluida la actual.</p>
         </details>
-        <p class="hint">PPM significa palabras por minuto: aciertos divididos entre cinco y los minutos de partida. Incluye esperas; excluye pausas y mejoras.</p>
         <h3 class="section-title">Mejoras</h3>
         <ul id="over-perks" class="perk-list"></ul>
         <div class="menu" data-menu>
@@ -248,6 +246,11 @@
           <button type="button" class="item" id="menu"><span class="item-name">Menú</span></button>
         </div>
         <p class="hint"><kbd>Enter</kbd> activa la opción enfocada · <kbd>Esc</kbd> menú</p>
+        <details class="help" id="stats-help">
+          <summary>Cómo se calculan las estadísticas</summary>
+          <p>PPM significa palabras por minuto: aciertos divididos entre cinco y los minutos de partida. Incluye esperas; excluye pausas y mejoras.</p>
+          <p id="history-help">Comparación por dificultad con hasta 20 partidas anteriores guardadas. Se muestran hasta cinco, incluida la actual.</p>
+        </details>
       </div>
     </section>
     <section id="screen-practice" class="overlay hidden" aria-labelledby="practice-title">

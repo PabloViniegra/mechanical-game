@@ -78,6 +78,14 @@ test('modo guiado: disparo, game over y reintento', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Te han devorado' })).toBeVisible();
   await expect(page.locator('#final-kills')).toHaveText('1');
   await expect(page.getByRole('button', { name: 'Reintentar', exact: true })).toBeFocused();
+  const statsHelp = page.locator('#stats-help');
+  await expect(statsHelp).not.toHaveAttribute('open', '');
+  await statsHelp.locator('summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(statsHelp).toHaveAttribute('open', '');
+  await expect(statsHelp).toContainText('PPM significa palabras por minuto');
+  await expect(page.locator('#history-help')).toBeHidden();
+  await page.getByRole('button', { name: 'Reintentar', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#screen-over')).toBeHidden();
   await expect(input).toBeFocused();
@@ -85,3 +93,54 @@ test('modo guiado: disparo, game over y reintento', async ({ page }) => {
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Pausa', exact: true })).toBeVisible();
 });
+
+for (const width of [1440, 390]) {
+  test(`logo, volumen y atajos de mejoras a ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    await page.evaluate(() => globalThis.document.fonts.ready);
+    const logoFits = await page.locator('.logo-main').evaluate((logo) => {
+      const last = logo.querySelector('i:last-child').getBoundingClientRect();
+      const cursor = globalThis.getComputedStyle(logo, '::after');
+      return last.right + Number.parseFloat(cursor.marginLeft) + Number.parseFloat(cursor.width)
+        <= logo.getBoundingClientRect().right;
+    });
+    expect(logoFits, 'El cursor cabe junto a QWERTY').toBe(true);
+    expect(await page.locator('.logo-top').evaluate((title) => title.scrollWidth <= title.clientWidth),
+      'Apocalipsis cabe sin recortarse').toBe(true);
+
+    await page.keyboard.press('o');
+    for (const id of ['opt-music', 'opt-sfx']) {
+      const label = await page.locator(`label[for="${id}"] > span`).boundingBox();
+      const slider = await page.locator(`#${id}`).boundingBox();
+      expect(slider.y >= label.y + label.height || slider.x >= label.x + label.width,
+        'El deslizador no se superpone a la etiqueta').toBe(true);
+    }
+    await page.locator('#opt-music').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.locator('#opt-music-value')).toHaveText('8');
+    await page.getByRole('button', { name: 'Modo guiado en la próxima partida' }).click();
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('2');
+    const target = page.locator('#guided-target');
+    for (let i = 0; i < 6; i++) {
+      await expect(target).toContainText('Objetivo:');
+      const word = (await target.textContent()).match(/^Objetivo: (.+)\. Completado:/)[1];
+      const score = await page.locator('#score').textContent();
+      await page.locator('#guided-input').fill(word);
+      await expect(page.locator('#score')).not.toHaveText(score);
+    }
+    await expect(page.locator('#screen-upgrade')).toBeVisible();
+    const keys = page.locator('#upgrade-choices .item-key');
+    for (let i = 0; i < await keys.count(); i++) {
+      await expect(keys.nth(i)).toBeVisible();
+      await expect(keys.nth(i)).toHaveText(String(i + 1));
+    }
+    // La protección de entrada deja leer la oferta antes de aceptar una tecla.
+    await page.waitForTimeout(450);
+    await page.keyboard.press('1');
+    await expect(page.locator('#screen-upgrade')).toBeHidden();
+    await expect(page.locator('#guided-input')).toBeFocused();
+  });
+}
