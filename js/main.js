@@ -9,6 +9,7 @@ import { Renderer } from './render/renderer.js';
 import { createUI, keyName } from './platform/ui.js';
 import { bindKeyboard } from './platform/input.js';
 import { createKeyboardGate } from './platform/keyboard-gate.js';
+import { bootTitle } from './platform/boot.js';
 import { sfx, music, menuMusic, setAudio, onAudioUnlock } from './platform/audio.js';
 import {
   loadRecord, saveRecord, clearRecord, loadSettings, saveSettings, loadProgress, saveProgress,
@@ -85,6 +86,8 @@ ui.setPixelSize(view.scale);
 applySettings();
 ui.showScreen('start');
 const keyboardGate = createKeyboardGate();
+// La sacudida hace que el tecleo del título se sienta como teclas físicas.
+bootTitle(document.getElementById('game'), { onKeystroke: () => { if (!game) demo.shake = 0.2; } });
 
 function applySettings() {
   setAudio({ music: settings.music / VOLUME_MAX, sfx: settings.sfx / VOLUME_MAX, muted: settings.muted });

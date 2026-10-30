@@ -50,6 +50,7 @@ export function setDemoMood(demo, difficulty) {
 export function updateDemo(demo, dt, { still = false } = {}) {
   const { pace, fire } = demo.mood;
   demo.muzzle = Math.max(0, demo.muzzle - dt);
+  demo.shake = Math.max(0, demo.shake - dt);
   demo.effects.update(dt);
 
   for (const z of demo.zombies) {

@@ -527,4 +527,9 @@ test('la demo del título abate zombis y escala con la dificultad', async () => 
   const still = createDemo();
   for (let i = 0; i < 600; i++) updateDemo(still, 0.05, { still: true });
   assert.equal(still.effects.tracers.length + still.effects.particles.length, 0);
+
+  // Las sacudidas del logo se apagan solas.
+  still.shake = 0.2;
+  for (let i = 0; i < 5; i++) updateDemo(still, 0.05, { still: true });
+  assert.equal(still.shake, 0);
 });
