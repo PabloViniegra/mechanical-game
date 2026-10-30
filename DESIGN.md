@@ -41,7 +41,7 @@ typography:
     lineHeight: 1.15
   label:
     fontFamily: "Press Start 2P, ui-monospace, monospace"
-    fontSize: "8px"
+    fontSize: "16px"
     fontWeight: 400
     lineHeight: 1
 rounded:
@@ -124,14 +124,14 @@ Se rechaza explícitamente la UI moderna: radios, degradados suaves, sombras dif
 - Todo medido en píxeles de arte (`--u`), escalado por enteros.
 - Esquinas siempre rectas; bordes de un píxel de arte o medio.
 - Movimiento por pasos (`steps()`), nunca interpolación suave.
-- Naranja brasa reservado para foco, valor activo y urgencia.
+- Naranja brasa reservado para foco y urgencia.
 
 ## Colors
 
 Una paleta terrosa y enfermiza de 16 tonos: verdes de musgo y liquen, hueso y polvo, sangre seca y una sola brasa caliente.
 
 ### Primary
-- **Brasa** (ember): el color de la acción. Foco de menú y su cursor-flecha, puntuación, récord, valores activos de opciones, granada cargada, multiplicador caliente, anillo de foco.
+- **Brasa** (ember): el color de la acción. Foco de menú y su cursor-flecha, puntuación del HUD, «¡Nuevo récord!», granada cargada, multiplicador caliente, anillo de foco.
 
 ### Secondary
 - **Óxido** (rust): sangre fresca. Corazón lleno, barra de vida del jefe, primera capa de sombra del logo y de los carteles.
@@ -169,7 +169,7 @@ Los tamaños derivan de `--u` (valores a `--u: 4px`); los de Press Start 2P se r
 - **Headline** (400, 32px, 1.2): títulos de pantalla («Pausa», «Opciones», «Te han devorado»), carteles de oleada y opciones del menú principal.
 - **Title** (400, 16px, 1.3): opciones de menú en paneles, valores del HUD (precisión y PPM incluidos), multiplicador, línea superior del logo (espaciado de hasta 0.5em, limitado a 1vw), títulos de sección, datos del resumen final, valores de opción, botones segmentados, «¡Nuevo récord!» y la línea de récord y PPM máx. Todo dato que el jugador quiera comparar entre partidas va aquí, nunca a 8px.
 - **Body** (400, 20px, 1.15): VT323 para ayuda, descripciones de mejoras, metadatos y etiquetas de opciones. Ancho máximo 38em. En pantallas de 560px o menos, mínimo 18px.
-- **Label** (400, 8px, mayúsculas): etiquetas del HUD, teclas de atajo, `kbd` y chips de mejora.
+- **Label** (400, 16px, mayúsculas): etiquetas del HUD, teclas de atajo, `kbd` y chips de mejora.
 
 ### Named Rules
 **The Multiple-of-Eight Rule.** Press Start 2P solo se usa a 8, 16, 32 o 64 px (y sus múltiplos de 8). Cualquier otro tamaño emborrona el píxel.
@@ -227,7 +227,7 @@ Cuadro de diálogo de consola.
 - **Móvil:** aviso visible de teclado físico; no se añade teclado virtual.
 
 ### Filas de opciones
-- **Style:** fila de 44px mínimo con separador inferior pizarra de 0.5u; etiqueta en VT323 y valor a la derecha en Label brasa.
+- **Style:** fila de 44px mínimo con separador inferior pizarra de 0.5u; etiqueta en VT323 y valor a la derecha en Label hueso.
 - **Interruptores:** valor apagado en polvo; hover con fondo noche.
 - **Deslizador:** pista pizarra de 2u, pulgar hueso rectangular de 3u × 5u.
 - **Foco:** contorno brasa de 0.5u con 0.5u de separación.
@@ -254,7 +254,7 @@ Headline hueso con relieve de cartel y subtítulo en VT323, centrado al 30 % de 
 ### Do:
 - **Do** medir todo en múltiplos de `--u` y dejar que escale con el canvas.
 - **Do** animar con `steps()` y duraciones cortas (0.25–0.8s); el movimiento es un clic, no un deslizamiento.
-- **Do** reservar la brasa para foco, valor activo y urgencia.
+- **Do** reservar la brasa para foco y urgencia.
 - **Do** usar Press Start 2P solo en múltiplos de 8 px y siempre a peso 400.
 - **Do** dibujar iconos nuevos como SVG de píxel con `crispEdges` y colores de la paleta.
 - **Do** desactivar parpadeos y desplazamientos bajo `prefers-reduced-motion` y respetar las opciones de temblor y CRT.
@@ -265,5 +265,6 @@ Headline hueso con relieve de cartel y subtítulo en VT323, centrado al 30 % de 
 - **Don't** usar degradados suaves, sombras con desenfoque, `backdrop-filter` ni glassmorphism.
 - **Don't** usar easing elástico, `ease-in-out` o transiciones interpoladas de posición o escala.
 - **Don't** introducir colores fuera de la paleta de 16, ni tonos intermedios «para matizar».
+- **Don't** poner en mayúsculas texto con «ó» en Press Start 2P: su «Ó» es idéntica a «ó» y se lee como minúscula. Reescribe el título.
 - **Don't** usar negritas ni tamaños de Press Start 2P que no sean múltiplos de 8.
 - **Don't** convertir los elementos de menú en botones con caja; el cursor-flecha es la affordance.

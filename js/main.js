@@ -147,7 +147,9 @@ function startGame(key) {
       const changed = renderer.setMap(mapIndex(wave)) && wave > 1;
       let sub = `${total} zombis se acercan`;
       if (wave === 1) {
-        sub = g.weak.length ? `Entrenas: ${g.weak.map(keyName).join(', ')}` : 'Escribe para disparar';
+        // La primera partida enseña la regla central; después, lo que se entrena.
+        if (progress.games === 0 && !g.guided) sub = 'La primera letra fija el objetivo. Acaba su palabra';
+        else sub = g.weak.length ? `Entrenas: ${g.weak.map(keyName).join(', ')}` : 'Escribe para disparar';
       }
       else if (boss) sub = 'Se acerca una abominación';
       else if (bonus) sub = `Superada +${bonus} · ${total} zombis`;

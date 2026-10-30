@@ -30,17 +30,23 @@
   --pixel: "Press Start 2P", ui-monospace, monospace;
   --body: "VT323", ui-monospace, monospace;
   /* Press Start 2P solo es nítida en múltiplos de 8 px. */
-  --fs-s: max(8px, round(down, calc(var(--u) * 2.5), 8px));
-  --fs-m: max(8px, round(nearest, calc(var(--u) * 4), 8px));
+  --fs-s: max(16px, round(down, calc(var(--u) * 4), 8px));
+  --fs-m: max(16px, round(nearest, calc(var(--u) * 5), 8px));
   --fs-l: max(16px, round(nearest, calc(var(--u) * 8), 8px));
   --fs-xl: max(32px, round(nearest, calc(var(--u) * 16), 8px));
   --fs-body: calc(var(--u) * 5);
   --heart: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6' shape-rendering='crispEdges'%3E%3Cpath fill='%23a8382a' d='M1 0h2v1H1zM4 0h2v1H4zM0 1h7v2H0zM1 3h5v1H1zM2 4h3v1H2zM3 5h1v1H3z'/%3E%3Cpath fill='%23e07a5f' d='M1 1h1v1H1z'/%3E%3Cpath fill='%235a1a1c' d='M5 2h1v1H5zM4 3h1v1H4z'/%3E%3C/svg%3E");
   --heart-empty: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6' shape-rendering='crispEdges'%3E%3Cpath fill='%232e3b36' d='M1 0h2v1H1zM4 0h2v1H4zM0 1h7v2H0zM1 3h5v1H1zM2 4h3v1H2zM3 5h1v1H3z'/%3E%3C/svg%3E");
+  --summary-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 7' shape-rendering='crispEdges'%3E%3Cpath fill='%23e8dfc4' d='M0 0h1v7H0zM1 1h1v5H1zM2 2h1v3H2zM3 3h1v1H3z'/%3E%3C/svg%3E");
   --cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 7' shape-rendering='crispEdges'%3E%3Cpath fill='%23e0892e' d='M0 0h1v7H0zM1 1h1v5H1zM2 2h1v3H2zM3 3h1v1H3z'/%3E%3C/svg%3E");
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  scrollbar-color: var(--slate) var(--ink);
+}
+
+::selection { background: var(--bone); color: var(--ink); }
 
 html, body {
   margin: 0;
@@ -289,6 +295,8 @@ kbd {
   overscroll-behavior: contain;
 }
 
+.keyboard-dialog [tabindex='-1']:focus-visible { outline: calc(var(--u) * 0.5) solid var(--ember); outline-offset: var(--u); }
+
 .keyboard-dialog::backdrop { background: #0d0f0eee; }
 
 /* El título de game over cae de golpe y rebota en un solo paso. */
@@ -366,13 +374,6 @@ kbd {
   animation: caret 1s steps(2) infinite;
 }
 
-.howto {
-  max-width: 38em;
-  margin: calc(var(--u) * 8) 0 0;
-  line-height: 1.4;
-  color: var(--dust);
-}
-
 .record {
   margin: calc(var(--u) * 3) 0 0;
   font-family: var(--pixel);
@@ -380,7 +381,7 @@ kbd {
   color: var(--dust);
 }
 
-.record strong { color: var(--ember); font-weight: 400; }
+.record strong { color: var(--bone); font-weight: 400; }
 
 /* Listas de opciones con cursor; se recorren con flechas (ver ui.js) */
 .menu {
@@ -470,6 +471,12 @@ kbd {
 
 .item:disabled { color: var(--dust); cursor: default; opacity: 0.6; }
 
+.keyboard-notice {
+  margin: 0 0 calc(var(--u) * 3);
+  color: var(--salmon);
+}
+.keyboard-notice:not(.hidden) ~ .menu [data-diff] { opacity: 0.6; }
+
 .title-screen .menu,
 .panel .menu { margin-top: calc(var(--u) * 6); }
 
@@ -480,7 +487,6 @@ kbd {
 
 .panel .menu-data { margin-top: 0; }
 .hint-data { margin-top: var(--u); }
-#screen-options .menu:last-of-type { margin-top: calc(var(--u) * 3); }
 .hint-data.armed { color: var(--salmon); }
 
 .upgrade-bonus { margin: 0; }
@@ -490,7 +496,25 @@ kbd {
 #upgrade-choices .item-meta { flex-wrap: wrap; }
 .hint, .help, .perk-desc { line-height: 1.4; }
 .help { margin-top: calc(var(--u) * 5); }
-.help summary { cursor: pointer; min-height: 44px; padding: calc(var(--u) * 2) 0; }
+.help summary {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 2);
+  min-height: 44px;
+  padding: calc(var(--u) * 2) 0;
+  cursor: pointer;
+  list-style: none;
+}
+.help summary::-webkit-details-marker { display: none; }
+.help summary::before {
+  content: '';
+  flex-shrink: 0;
+  width: calc(var(--u) * 2);
+  height: calc(var(--u) * 3.5);
+  background: var(--summary-arrow) center / contain no-repeat;
+  image-rendering: pixelated;
+}
+.help[open] > summary::before { transform: rotate(90deg); }
 .help p, .help li { max-width: 38em; }
 .help li + li { margin-top: var(--u); }
 .perk-list.perk-details { display: grid; }
@@ -517,7 +541,7 @@ kbd {
   border: calc(var(--u) * 0.5) solid var(--slate);
 }
 
-.perk-level { color: var(--ember); }
+.perk-level { color: var(--bone); }
 .perk.rare .perk-name { color: var(--sick); }
 .perk.cursed .perk-name { color: var(--salmon); }
 .perk.synergy .perk-name { color: var(--ember); }
@@ -550,6 +574,9 @@ kbd {
 
 .summary dt { color: var(--dust); }
 
+.summary-hero dd { font-size: var(--fs-l); }
+.summary-hero { margin-bottom: calc(var(--u) * 2); }
+
 .summary dd {
   margin: 0;
   font-family: var(--pixel);
@@ -557,7 +584,6 @@ kbd {
   color: var(--bone);
 }
 
-.summary div:first-child dd { color: var(--ember); }
 
 .progress {
   margin: calc(var(--u) * 3) 0 0;
@@ -629,7 +655,7 @@ kbd {
   font-family: var(--pixel);
   font-size: var(--fs-m);
   text-align: right;
-  color: var(--ember);
+  color: var(--bone);
 }
 
 .toggle { width: 100%; text-align: left; cursor: pointer; }

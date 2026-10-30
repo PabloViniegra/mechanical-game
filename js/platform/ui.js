@@ -441,9 +441,7 @@ export function createUI(actions) {
       this.setMuted(settings.muted);
       el.crt.classList.toggle('hidden', !settings.crt);
       el.hud.classList.toggle('no-stats', !settings.stats);
-      $('#mode-description').textContent = settings.guided
-        ? 'Modo guiado activado. Elige una dificultad para empezar.'
-        : 'Modo guiado disponible en Opciones.';
+      $('#mode-description').classList.toggle('hidden', !settings.guided);
       // El menú enfoca la dificultad elegida para empezar con Enter.
       document.querySelectorAll('[data-diff]').forEach((card) => {
         card.toggleAttribute('data-autofocus', card.dataset.diff === settings.difficulty);
