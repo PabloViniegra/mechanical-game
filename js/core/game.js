@@ -291,8 +291,15 @@ export class Game {
     this.effects.burst(z.x, ty, { count: 3, colors: BLOOD, force: 45, floorY: footY(z), stay: 2 });
     this.muzzle = 0.06;
     z.hit = 0.08;
-    z.x += 1.5 + this.perk('heavy');
+    this.pushBack(z, 1.5 + this.perk('heavy'));
     this.emit('shoot', z);
+  }
+
+  // Retrocede al zombi sin sacarlo de la pantalla: fuera de ella su etiqueta
+  // quedaría desconectada del sprite y el jugador no vería qué escribir.
+  // Quien aún no ha entrado (x > límite) no se mueve.
+  pushBack(z, dx) {
+    z.x = Math.min(z.x + dx, Math.max(z.x, view.w - z.w / 2));
   }
 
   // Arranca n letras sin teclear: rebotes y granadas.
@@ -320,7 +327,7 @@ export class Game {
     z.folded = fold(z.word);
     z.typed = 0;
     z.weakTyped = false;
-    z.x += BOSS.push;
+    this.pushBack(z, BOSS.push);
     // Furia lineal: la velocidad base crece `rage` por palabra, no se compone.
     z.speed *= (1 + BOSS.rage * z.part) / (1 + BOSS.rage * (z.part - 1));
     this.release(z, BOSS.minions, { reserved: z.parts.slice(z.part + 1), gap: BOSS.minionGap });
@@ -432,7 +439,7 @@ export class Game {
     for (const z of this.hostiles) {
       if (z.dead) continue; // abatido en cadena por un rebote
       this.effects.burst(z.x, chestY(z), { count: 14, colors: FIRE, force: 70, floorY: footY(z), stay: 1 });
-      z.x += GRENADE.push;
+      this.pushBack(z, GRENADE.push);
       this.chip(z, letters);
     }
     this.emit('grenade');
@@ -460,7 +467,7 @@ export class Game {
     }
     // El jefe no cae al llegar: golpea y retrocede.
     if (boss) {
-      z.x += BOSS.knockback;
+      this.pushBack(z, BOSS.knockback);
     } else {
       z.gone = true;
       if (this.target === z) this.target = null;

@@ -267,6 +267,20 @@ test('cada cinco oleadas aparece un jefe con varias palabras', () => {
   assert.deepEqual(kills, ['boss']);
 });
 
+test('el jefe nunca retrocede fuera de la pantalla', () => {
+  const game = new Game('normal');
+  game.wave = 4;
+  game.nextWave(0);
+  game.spawn();
+  const boss = game.zombies[0];
+  boss.x = view.w - boss.w;
+  game.breach(boss);
+  assert.ok(boss.x + boss.w / 2 <= view.w);
+  typeWord(game, boss.parts[0]);
+  game.throwGrenade();
+  assert.ok(boss.x + boss.w / 2 <= view.w);
+});
+
 test('cada palabra del jefe lo enfurece y suelta corredores', () => {
   const game = new Game('normal');
   game.wave = 4;
