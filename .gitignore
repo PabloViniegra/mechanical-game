@@ -1,6 +1,10 @@
 /node_modules/
+/research_notes/
+/playwright-report/
+/test-results/
 /.impeccable/critique/
 graphify-out/
 .vercel
 .mcp.json
 opencode.json
+reports/Dependencias para Apocalipsis QWERTY.md

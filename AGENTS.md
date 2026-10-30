@@ -1,13 +1,17 @@
 # Apocalipsis QWERTY — reglas del proyecto
 
-Juego de mecanografía en pixel art. JavaScript vanilla con módulos ES, sin build
-ni dependencias. Estas reglas son obligatorias; `npm run check` hace cumplir las
+Juego de mecanografía en pixel art. JavaScript vanilla con módulos ES; actualmente
+sin build. Se permiten dependencias justificadas. Estas reglas son obligatorias; `npm run check` hace cumplir las
 marcadas con ✔.
 
 ## Comandos
 
 - `npm start` — sirve el juego en http://localhost:8000 (los módulos ES no cargan desde `file://`).
-- `npm run check` — sintaxis + tests (`node --test`, Node ≥ 20). Debe pasar antes de dar un cambio por terminado.
+- `npm ci` — instala las herramientas de desarrollo con el lockfile (Node ≥ 24).
+- `npm run check` — Oxlint + sintaxis + tests unitarios. Debe pasar antes de dar un cambio por terminado.
+- `npm run lint` — Oxlint; los avisos también hacen fallar el comando.
+- `npm test` — tests unitarios con `node --test`, limitados a `tests/`.
+- `npm run test:e2e` — Playwright en Chromium, con suite separada en `e2e/`. Antes del primer uso, ejecutar `npx playwright install chromium`.
 - Si cambias render, UI o input, pruébalo además en el navegador: menú, partida, pausa (`Esc`), game over y consola sin errores ni avisos de CSP.
 
 ## Arquitectura en capas
@@ -31,8 +35,16 @@ js/
 
 - ✔ Ninguna capa importa fuera de lo permitido; `render` y `platform` no se conocen entre sí.
 - ✔ `data/` y `core/` no usan `document`, `window`, `localStorage`, `matchMedia`, `AudioContext` ni `requestAnimationFrame`. Todo `core/` debe poder ejecutarse en Node.
-- ✔ Sin imports externos (paquetes o URLs). Todo se sirve desde el propio origen.
+- ✔ Sin imports desde URLs externas. Las dependencias de navegador se sirven desde el propio origen.
 - Un módulo nuevo va en la capa de su dependencia más alta, no en `main.js`.
+
+## Dependencias
+
+- Se permiten paquetes de desarrollo y de ejecución cuando resuelvan una necesidad concreta; no se añaden solo para posibles features futuras.
+- Antes de incorporar uno, justificar su ventaja frente al código existente y revisar mantenimiento, licencia, compatibilidad, peso y dependencias transitivas.
+- Registrar los paquetes en `package.json` y versionar el lockfile. No usar CDNs ni depender de instalaciones globales.
+- Mantener las capas, la CSP y la ejecución de `core/` en Node. Las dependencias con APIs del navegador se integran en `platform/` o `render/`, según su responsabilidad.
+- Si un paquete requiere bundler o cambios en los comandos, adaptar y documentar el flujo de desarrollo, tests y despliegue en el mismo cambio.
 
 ## Patrones fijos
 
@@ -60,7 +72,7 @@ js/
 
 ## Tests
 
-- Los tests viven en `tests/` y solo importan de `data/` y `core/`.
+- Los tests unitarios viven en `tests/`; sus imports de código del juego se limitan a `data/` y `core/`. Las pruebas de navegador se mantienen separadas de la suite de `node --test`.
 - Prueba comportamiento observable (puntos, vidas, eventos emitidos), no detalles internos.
 - Un bug corregido en `core/` lleva un test que lo reproduce.
 

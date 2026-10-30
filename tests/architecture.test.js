@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-// Cada capa solo puede importar de las capas listadas.
+// Los imports locales respetan las capas; los paquetes no se cargan desde URLs.
 const ALLOWED = {
   data: ['data'],
   core: ['data', 'core'],
@@ -21,8 +21,10 @@ for (const [layer, allowed] of Object.entries(ALLOWED)) {
   test(`${layer}/ solo importa de ${allowed.join(', ')}`, () => {
     for (const file of filesIn(layer)) {
       for (const spec of importsOf(readFileSync(file, 'utf8'))) {
-        assert.ok(spec.startsWith('.'), `${file}: import externo ${spec}`);
-        assert.ok(allowed.includes(layerOf(file, spec)), `${file} importa ${spec}`);
+        assert.doesNotMatch(spec, /^(?:[a-z][a-z\d+.-]*:|\/)/i, `${file}: import desde URL ${spec}`);
+        if (spec.startsWith('.')) {
+          assert.ok(allowed.includes(layerOf(file, spec)), `${file} importa ${spec}`);
+        }
       }
     }
   });
