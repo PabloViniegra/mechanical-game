@@ -282,6 +282,15 @@ kbd {
 
 .screen-title.dead { color: var(--salmon); }
 
+.keyboard-dialog {
+  width: min(calc(var(--u) * 150), calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  color: var(--bone);
+  overscroll-behavior: contain;
+}
+
+.keyboard-dialog::backdrop { background: #0d0f0eee; }
+
 /* El título de game over cae de golpe y rebota en un solo paso. */
 #screen-over:not(.hidden) .screen-title.dead { animation: slam 0.5s steps(5) 1; }
 
@@ -484,7 +493,6 @@ kbd {
 .perk-list.perk-details { display: grid; }
 .perk-details .perk { flex-wrap: wrap; align-items: baseline; }
 .perk-desc { flex-basis: 100%; font-family: var(--body); font-size: var(--fs-body); color: var(--dust); }
-.mobile-notice { display: none; }
 
 /* Mejoras */
 .perk-list {
@@ -734,7 +742,6 @@ kbd {
 }
 
 @media (max-width: 560px) {
-  .mobile-notice { display: block; }
   #upgrade-choices .item { grid-template-columns: minmax(0, 1fr); }
   #upgrade-choices .item-meta, #upgrade-choices .item-desc { grid-column: 1; }
   html, body { font-size: max(18px, var(--fs-body)); }

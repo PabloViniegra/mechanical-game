@@ -122,7 +122,6 @@
           Escribe la palabra de un zombi para dispararle; la primera letra fija el objetivo.
           Las tildes son opcionales. <kbd>Enter</kbd> granada · <kbd>Esc</kbd> pausa
         </p>
-        <p class="mobile-notice hint">Necesitas un teclado físico para jugar. En móvil, abre el juego en un ordenador.</p>
         <p class="hint" id="mode-description">Para jugar sin presión de tiempo y con objetivos en texto, activa el modo guiado en Opciones.</p>
         <p class="record">Récord <strong id="record">000000</strong><span id="best-wpm-wrap" class="hidden"> · PPM máx global <strong id="best-wpm">0</strong></span></p>
       </div>
@@ -263,5 +262,10 @@
       </div>
     </section>
   </main>
+  <dialog id="keyboard-dialog" class="panel keyboard-dialog" aria-labelledby="keyboard-title" aria-describedby="keyboard-description keyboard-help">
+    <h2 id="keyboard-title" class="screen-title" tabindex="-1" autofocus>Necesitas un teclado</h2>
+    <p id="keyboard-description">Este juego requiere un teclado físico. No se puede jugar solo con la pantalla táctil.</p>
+    <p id="keyboard-help" class="hint">Conecta un teclado y pulsa una letra para desbloquear el menú. Después elige una dificultad. También puedes abrir el juego en un ordenador.</p>
+  </dialog>
 </body>
 </html>

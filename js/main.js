@@ -8,6 +8,7 @@ import { view } from './core/view.js';
 import { Renderer } from './render/renderer.js';
 import { createUI, keyName } from './platform/ui.js';
 import { bindKeyboard } from './platform/input.js';
+import { createKeyboardGate } from './platform/keyboard-gate.js';
 import { sfx, music, menuMusic, setAudio, onAudioUnlock } from './platform/audio.js';
 import {
   loadRecord, saveRecord, clearRecord, loadSettings, saveSettings, loadProgress, saveProgress,
@@ -83,6 +84,7 @@ ui.setRecord(record, progress);
 ui.setPixelSize(view.scale);
 applySettings();
 ui.showScreen('start');
+const keyboardGate = createKeyboardGate();
 
 function applySettings() {
   setAudio({ music: settings.music / VOLUME_MAX, sfx: settings.sfx / VOLUME_MAX, muted: settings.muted });
@@ -123,6 +125,7 @@ onAudioUnlock(() => {
 });
 
 function startGame(key) {
+  if (!keyboardGate.requireKeyboard()) return;
   sfx.ensure();
   menuMusic.stop();
   diffKey = key;
