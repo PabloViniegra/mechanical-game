@@ -300,23 +300,25 @@ kbd {
 
 .keyboard-dialog [tabindex='-1']:focus-visible { outline: calc(var(--u) * 0.5) solid var(--ember); outline-offset: var(--u); }
 
+.keyboard-dialog p { margin-bottom: 0; }
+
 .keyboard-dialog::backdrop { background: #0d0f0eee; }
 
 /* El título de game over cae de golpe y rebota en un solo paso. */
 #screen-over:not(.hidden) .screen-title.dead { animation: slam 0.5s steps(5) 1; }
-/* Tras el golpe, el marcador se imprime fila a fila. Solo es decoración: las
+/* Tras el golpe, el marcador se enciende fila a fila. Solo es decoración: las
    opciones responden desde el primer momento. */
 #screen-over:not(.hidden) .summary-hero div,
 #screen-over:not(.hidden) .progress,
-#screen-over:not(.hidden) .advice { animation: type-on 0.3s steps(8) 0.5s both; }
+#screen-over:not(.hidden) .advice { animation: flicker-on 0.3s steps(1) 0.5s both; }
 #screen-over:not(.hidden) .summary-hero div:nth-child(2) { animation-delay: 0.56s; }
 #screen-over:not(.hidden) #final-progress { animation-delay: 0.62s; }
 #screen-over:not(.hidden) #final-weak { animation-delay: 0.68s; }
 #screen-over:not(.hidden) #final-advice { animation-delay: 0.74s; }
 
-/* Las mejoras se imprimen durante la guarda de UPGRADE_GUARD_MS (ui.js): así se
+/* Las mejoras caen durante la guarda de UPGRADE_GUARD_MS (ui.js): así se
    ve por qué una tecla temprana todavía no elige. */
-#screen-upgrade:not(.hidden) #upgrade-choices .item { animation: type-on 0.3s steps(8) both; }
+#screen-upgrade:not(.hidden) #upgrade-choices .item { animation: drop-in 0.3s steps(3) both; }
 #screen-upgrade:not(.hidden) #upgrade-choices .item:nth-child(2) { animation-delay: 0.05s; }
 #screen-upgrade:not(.hidden) #upgrade-choices .item:nth-child(n+3) { animation-delay: 0.1s; }
 
@@ -363,11 +365,11 @@ kbd {
 }
 
 /* Cada letra es una tecla: se teclea una a una al entrar y una ola de pulsaciones
-   la recorre de vez en cuando. La R es la tecla estropeada del rótulo. */
+   la recorre unas veces antes de quedarse quieta. La R es la tecla estropeada del rótulo. */
 .logo-main i {
   display: inline-block;
   font-style: normal;
-  animation: key-in 0.5s steps(5) both, key-wave 9s steps(1) infinite;
+  animation: key-in 0.5s steps(5) both, key-wave 9s steps(1) 3;
 }
 /* --boot retrasa el tecleo hasta que el tubo se ha encendido (ver .booting) */
 .logo-main i:nth-child(1) { animation-delay: calc(var(--boot, 0s) + 0.2s), 4s; }
@@ -378,7 +380,7 @@ kbd {
 .logo-main i:nth-child(6) { animation-delay: calc(var(--boot, 0s) + 1.2s), 5s; }
 /* Con la R se suma el parpadeo del rótulo; el retardo de key-in va primero */
 .logo-main i:nth-child(4) {
-  animation: key-in 0.5s steps(5) calc(var(--boot, 0s) + 0.8s) both, key-wave 9s steps(1) 4.6s infinite, sign-flicker 7s steps(1) 2.5s infinite;
+  animation: key-in 0.5s steps(5) calc(var(--boot, 0s) + 0.8s) both, key-wave 9s steps(1) 4.6s 3, sign-flicker 7s steps(1) 2.5s 3;
 }
 
 /* Cursor de bloque tras la última tecla */
@@ -452,6 +454,8 @@ kbd {
 }
 
 .record strong { color: var(--bone); font-weight: 400; }
+
+.title-record { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2) 1em; }
 
 /* Listas de opciones con cursor; se recorren con flechas (ver ui.js) */
 .menu {
@@ -816,6 +820,18 @@ kbd {
   to { clip-path: inset(0 0 0 calc(var(--u) * -8)); }
 }
 
+@keyframes flicker-on {
+  0% { opacity: 0; }
+  25% { opacity: 1; }
+  50% { opacity: 0.35; }
+  75%, 100% { opacity: 1; }
+}
+
+@keyframes drop-in {
+  from { opacity: 0; transform: translateY(calc(var(--u) * -3)); }
+  to { opacity: 1; transform: none; }
+}
+
 @keyframes key-in {
   0% { opacity: 0; transform: translateY(calc(var(--u) * -3)); }
   60% { opacity: 1; transform: translateY(calc(var(--u) * 3)); text-shadow: 0 0 0 var(--ink); }
@@ -878,7 +894,7 @@ kbd {
   .summary { grid-template-columns: 1fr; }
   .menu { padding-left: calc(var(--u) * 6); }
   .item { grid-template-columns: auto 1fr; }
-  .item-key { display: none; }
+  .item-key, .hint-keys { display: none; }
   .item-meta, .item-desc { grid-column: 1 / -1; }
   .title-screen .item-name { font-size: var(--fs-m); }
 

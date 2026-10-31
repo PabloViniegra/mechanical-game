@@ -67,7 +67,6 @@ export function updateDemo(demo, dt, { still = false } = {}) {
 
   demo.cooldown = Math.max(0, demo.cooldown - dt);
   if (still || demo.cooldown > 0) return;
-  // Dispara al más cercano que ya esté en pantalla.
   const near = demo.zombies
     .filter((z) => !z.dead && z.x < view.w - 10)
     .sort((a, b) => a.x - b.x)[0];

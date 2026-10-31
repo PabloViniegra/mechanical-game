@@ -42,7 +42,6 @@ export function buildSprite(rows, palette, { outline = true } = {}) {
   return canvas;
 }
 
-// Silueta de un color (destello al recibir un disparo).
 function tint(src, color) {
   const c = makeCanvas(src.width, src.height);
   const ctx = c.getContext('2d');

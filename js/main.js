@@ -155,11 +155,11 @@ function startGame(key) {
         else sub = g.weak.length ? `Entrenas: ${g.weak.map(keyName).join(', ')}` : 'Escribe para disparar';
       }
       else if (boss) sub = 'Se acerca una abominación';
-      else if (bonus) sub = `Superada +${bonus} · ${total} zombis`;
-      if (changed) sub = `${MAPS[renderer.map].name} · ${sub}`;
+      else if (bonus) sub = `Superada con +${bonus}. ${total} zombis`;
+      if (changed) sub = `${MAPS[renderer.map].name}. ${sub}`;
       // La sinergia recién activada ocupa el subtítulo: es lo que hay que celebrar.
       if (synergy) sub = `Sinergia ${SYNERGIES[synergy].name}. ${SYNERGIES[synergy].desc}`;
-      ui.banner(boss ? `JEFE · OLEADA ${wave}` : `OLEADA ${wave}`, sub, { synergy: Boolean(synergy) });
+      ui.banner(boss ? `OLEADA ${wave}: JEFE` : `OLEADA ${wave}`, sub, { synergy: Boolean(synergy) });
       synergy = null;
       ui.updateHud(g);
       sfx.wave();

@@ -512,7 +512,8 @@ export function createUI(actions) {
       el.final.score.textContent = game.score;
       el.final.wave.textContent = game.wave;
       el.final.kills.textContent = game.kills;
-      el.final.accuracy.textContent = `${game.accuracy}%`;
+      // Sin pulsaciones no hay precisión que medir; el 100 % del HUD sería engañoso aquí.
+      el.final.accuracy.textContent = game.hits + game.misses ? `${game.accuracy}%` : '—';
       el.final.wpm.textContent = game.wpm;
       el.final.combo.textContent = game.maxCombo;
       const comparable = prev.history.filter((entry) => entry.difficulty === game.diffKey);

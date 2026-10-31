@@ -81,7 +81,6 @@ export class Renderer {
       this.drawFlashes(b, scene, t);
     }
 
-    // Composición ampliada con temblor de cámara en píxeles enteros.
     let ox = 0;
     let oy = 0;
     if (shake && scene.shake > 0 && !this.reducedMotion) {
@@ -164,7 +163,6 @@ export class Renderer {
     this.drawShadow(b, x + 3, fy - 1, spr.w - 6);
 
     if (z.dead) {
-      // Se hunde en la tierra.
       const k = clamp((z.deathT - 0.1) / 0.6, 0, 1);
       const visible = Math.round(spr.h * (1 - k));
       if (visible > 0) b.drawImage(img, 0, 0, spr.w, visible, x, fy - visible, spr.w, visible);

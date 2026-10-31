@@ -40,7 +40,6 @@ const SKYLINES = {
     }
   },
 
-  // Árboles sin hojas: tronco y ramas torcidas.
   forest(ctx, r, map) {
     const { w, horizon } = view;
     ctx.fillStyle = map.silhouette;
@@ -58,7 +57,6 @@ const SKYLINES = {
     }
   },
 
-  // Dunas bajas con postes quemados.
   dunes(ctx, r, map) {
     const { w, horizon } = view;
     ctx.fillStyle = map.silhouette;
@@ -74,7 +72,6 @@ const SKYLINES = {
     }
   },
 
-  // Cumbres dentadas.
   peaks(ctx, r, map) {
     const { w, horizon } = view;
     ctx.fillStyle = map.silhouette;
@@ -125,7 +122,6 @@ export function paintBackground(canvas, map) {
   SKYLINES[map.skyline](ctx, r, map);
 
   if (map.fence) {
-    // Verja del cementerio
     ctx.fillStyle = map.silhouette;
     ctx.fillRect(0, horizon - 4, w, 1);
     for (let fx = 0; fx < w; fx += 3) {

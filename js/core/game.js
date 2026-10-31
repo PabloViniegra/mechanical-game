@@ -14,12 +14,8 @@ import { rand, clamp, fold, pick, pickWeighted } from './utils.js';
 const SPLINTERS = [C.mud, C.earth, C.rust];
 const FIRE = [C.ember, C.flame, C.bone, C.slate];
 
-// Lógica de una partida, sin DOM ni audio. Notifica mediante callbacks:
-// change (estadísticas), wave ({ wave, total, bonus, boss }), upgrade (ids a elegir),
-// over, revive y los momentos sonoros spawn, lock, shoot, miss, kill, hurt,
-// grenade, ready (la granada se carga del todo), part (el jefe pierde una palabra),
-// shift (un mutante cambia de palabra), loot (se recoge una caja), perfect (oleada
-// sin fallos ni daño) y synergy (id de la sinergia que se acaba de activar).
+// Lógica de una partida, sin DOM ni audio. Notifica con `emit`; la lista de
+// eventos se mantiene en AGENTS.md.
 // `weak` son las letras débiles del jugador: salen más y puntúan más.
 export class Game {
   constructor(diffKey, events = {}, { guided = false, weak = [] } = {}) {

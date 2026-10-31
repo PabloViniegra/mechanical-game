@@ -36,7 +36,7 @@ Práctica de mecanografía en español real: vocabulario y frases en castellano 
 - Mejoras normales, raras y malditas (con coste) definidas en `js/data/config.js`.
 - HUD: vidas, granada, puntos, progreso de oleada, racha, multiplicador, precisión y PPM opcionales, silencio, vida del jefe.
 - Opciones persistentes: volumen de música y efectos, silencio, dificultad, estadísticas en HUD, temblor de pantalla, filtro CRT, borrar récord.
-- Técnica: JavaScript vanilla con módulos ES, sin build ni dependencias externas; CSP estricta sin `unsafe-inline`; arquitectura en capas descrita en `AGENTS.md`.
+- Técnica: JavaScript vanilla con módulos ES, sin build ni dependencias de ejecución externas; CSP estricta sin `unsafe-inline`; arquitectura en capas descrita en `AGENTS.md`.
 - Todo es usable solo con teclado.
 
 ## Brand Commitments
@@ -44,7 +44,7 @@ Práctica de mecanografía en español real: vocabulario y frases en castellano 
 - Nombre: **Apocalipsis QWERTY**. Idioma de UI: español.
 - Tono de humor macabro: zombis con gracia (payaso podrido, cajera hambrienta), no gore serio.
 - Estética pixel art con filtro CRT opcional; fuentes Press Start 2P y VT323 autoalojadas (OFL). Es un compromiso que el trabajo futuro debe preservar.
-- Cero dependencias: nada de CDNs, fuentes remotas ni paquetes.
+- Nada de CDNs ni fuentes remotas. Los paquetes solo entran justificados y servidos desde el propio origen (ver `AGENTS.md`).
 
 ## Evidence on Hand
 
@@ -59,7 +59,7 @@ Práctica de mecanografía en español real: vocabulario y frases en castellano 
 2. Precisión antes que velocidad: los fallos tienen coste visible; la velocidad se gana por oleadas.
 3. Español de verdad: vocabulario natural, concordancia correcta y entrada tolerante con tildes.
 4. Humor macabro, nunca cruel: el miedo es de broma.
-5. Ligero y propio: abre al instante, funciona sin red externa y sin dependencias.
+5. Ligero y propio: abre al instante, funciona sin red externa y sin dependencias innecesarias.
 
 ## Accessibility & Inclusion
 
