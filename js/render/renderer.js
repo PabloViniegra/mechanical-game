@@ -10,6 +10,8 @@ import { ZOMBIE_ACCENTS, GLYPH_H, MARK_H } from '../data/art.js';
 import { LOOT, HEARTBEAT } from '../data/config.js';
 import { PALETTE as C } from '../data/palette.js';
 
+const SHAKE_HZ = 30;
+
 const COLORS = {
   target: C.ember,
   text: C.dust,
@@ -34,6 +36,8 @@ export class Renderer {
     this.bctx = this.buffer.getContext('2d');
     this.bg = document.createElement('canvas');
     this.map = 0;
+    this.shakeStep = -1;
+    this.shakeDir = [0, 0];
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     this.reducedMotion = motion.matches;
     motion.addEventListener('change', (event) => { this.reducedMotion = event.matches; });
@@ -81,9 +85,16 @@ export class Renderer {
     let ox = 0;
     let oy = 0;
     if (shake && scene.shake > 0 && !this.reducedMotion) {
+      // El sacudón cambia a ritmo fijo: sortearlo en cada fotograma haría que
+      // temblara más deprisa en pantallas de alta frecuencia.
+      const step = Math.floor(t * SHAKE_HZ);
+      if (step !== this.shakeStep) {
+        this.shakeStep = step;
+        this.shakeDir = [rand(-2, 2), rand(-2, 2)];
+      }
       const k = scene.shake / 0.4;
-      ox = Math.round(rand(-2, 2) * k);
-      oy = Math.round(rand(-2, 2) * k);
+      ox = Math.round(this.shakeDir[0] * k);
+      oy = Math.round(this.shakeDir[1] * k);
     }
     const ctx = this.ctx;
     const px = view.scale * this.dpr;

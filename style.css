@@ -151,10 +151,11 @@ kbd {
 }
 
 .meter-fill {
-  width: 0;
   height: 100%;
   background: var(--lichen);
-  transition: width 0.25s steps(5);
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left;
+  transition: transform 0.25s steps(5);
 }
 
 .meter-fill.hot { background: var(--ember); }
@@ -162,7 +163,7 @@ kbd {
 .meter.small { width: calc(var(--u) * 20); }
 
 .hud-block.ready .hud-label, .hud-block.ready .hud-label span { color: var(--ember); }
-.hud-block.ready .meter { animation: pulse 0.6s steps(2) infinite; }
+.hud-block.ready .meter { animation: pulse 0.6s steps(2) 3; }
 
 .hud-kbd { padding: 0 calc(var(--u) * 0.5); font-size: var(--fs-s); }
 
@@ -172,10 +173,9 @@ kbd {
   color: var(--dust);
 }
 
-.mult.hot {
-  color: var(--ember);
-  animation: pulse 0.6s steps(2) infinite;
-}
+.mult.hot { color: var(--ember); }
+/* Avisa al subir y se queda fijo: un parpadeo constante distrae de las palabras. */
+.mult.bump { animation: pulse 0.6s steps(2) 3; }
 
 .hearts { display: flex; gap: var(--u); }
 
@@ -189,6 +189,7 @@ kbd {
 
 .heart.empty { background-image: var(--heart-empty); }
 .heart.lost { animation: heart-lost 0.6s steps(6); }
+.heart.gained { animation: heart-gained 0.3s steps(3); }
 
 .icon-btn {
   width: max(44px, calc(var(--u) * 10));
@@ -255,6 +256,8 @@ kbd {
 }
 
 .banner.show { animation: banner 2.6s steps(13) forwards; }
+/* La sinergia cae sobre el cartel cuando este ya es visible, para distinguirla. */
+.banner.synergy .banner-sub { color: var(--ember); animation: slam 0.3s steps(3) 0.3s both; }
 
 /* Pantallas */
 .overlay {
@@ -301,6 +304,21 @@ kbd {
 
 /* El título de game over cae de golpe y rebota en un solo paso. */
 #screen-over:not(.hidden) .screen-title.dead { animation: slam 0.5s steps(5) 1; }
+/* Tras el golpe, el marcador se imprime fila a fila. Solo es decoración: las
+   opciones responden desde el primer momento. */
+#screen-over:not(.hidden) .summary-hero div,
+#screen-over:not(.hidden) .progress,
+#screen-over:not(.hidden) .advice { animation: type-on 0.3s steps(8) 0.5s both; }
+#screen-over:not(.hidden) .summary-hero div:nth-child(2) { animation-delay: 0.56s; }
+#screen-over:not(.hidden) #final-progress { animation-delay: 0.62s; }
+#screen-over:not(.hidden) #final-weak { animation-delay: 0.68s; }
+#screen-over:not(.hidden) #final-advice { animation-delay: 0.74s; }
+
+/* Las mejoras se imprimen durante la guarda de UPGRADE_GUARD_MS (ui.js): así se
+   ve por qué una tecla temprana todavía no elige. */
+#screen-upgrade:not(.hidden) #upgrade-choices .item { animation: type-on 0.3s steps(8) both; }
+#screen-upgrade:not(.hidden) #upgrade-choices .item:nth-child(2) { animation-delay: 0.05s; }
+#screen-upgrade:not(.hidden) #upgrade-choices .item:nth-child(n+3) { animation-delay: 0.1s; }
 
 .section-title {
   margin: calc(var(--u) * 5) 0 calc(var(--u) * 2);
@@ -830,6 +848,12 @@ kbd {
   100% { transform: none; }
 }
 
+@keyframes heart-gained {
+  0% { transform: scale(0.6); filter: brightness(3); }
+  50% { transform: scale(1.3); }
+  100% { transform: none; }
+}
+
 @keyframes banner {
   0% { opacity: 0; transform: translateY(calc(var(--u) * -4)); }
   12% { opacity: 1; transform: none; }
@@ -872,7 +896,8 @@ kbd {
 
 @media (prefers-reduced-motion: reduce) {
   .mult.hot, .new-record, .hud-block.ready .meter { animation: none; }
-  .heart.lost, .logo-main i, .logo-main i:nth-child(n), .logo-main::after, #screen-over:not(.hidden) .screen-title.dead { animation: none; }
+  .heart.lost, .heart.gained, .mult.bump, .banner.synergy .banner-sub, .logo-main i, .logo-main i:nth-child(n), .logo-main::after, #screen-over:not(.hidden) .screen-title.dead { animation: none; }
+  #screen-over:not(.hidden) :is(.summary-hero div, .progress, .advice), #screen-upgrade:not(.hidden) #upgrade-choices .item { animation: none; }
   .banner.show { animation-name: banner-fade; }
   @keyframes banner-fade {
     0%, 100% { opacity: 0; }

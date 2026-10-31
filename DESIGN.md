@@ -238,16 +238,16 @@ Cuadro de diálogo de consola.
 
 ### Barras de progreso
 - **Style:** pista noche con 0.5u de relleno interior; relleno liquen (oleada), brasa (racha, granada) u óxido (jefe).
-- **Motion:** el ancho cambia en `0.25s steps(5)`. La granada lista parpadea en `0.6s steps(2)`.
+- **Motion:** el relleno escala en horizontal (`scaleX`) en `0.25s steps(5)`. Al cargarse la granada, la barra parpadea tres veces en `0.6s steps(2)` y queda fija.
 
 ### HUD
-Franja tinta con borde inferior pizarra de 1u. Etiquetas en Label polvo con el número dinámico en hueso, puntuación en Title brasa, corazones de píxel 7u × 6u. Cuando el multiplicador está caliente, pasa a brasa y parpadea.
+Franja tinta con borde inferior pizarra de 1u. Etiquetas en Label polvo con el número dinámico en hueso, puntuación en Title brasa, corazones de píxel 7u × 6u. Cuando el multiplicador está caliente pasa a brasa; cada vez que sube parpadea tres veces y queda fijo. Un corazón perdido destella y se encoge; uno recuperado crece desde `scale(0.6)` en `0.3s steps(3)`.
 
 ### Teclas (`kbd`)
 Label hueso sobre noche con borde pizarra de 0.5u. Aparecen en ayudas y en el HUD para nombrar teclas reales.
 
 ### Cartel de oleada
-Headline hueso con relieve de cartel y subtítulo en VT323, centrado al 30 % de altura. Entra desde 4u arriba y se desvanece en `2.6s steps(13)`; con movimiento reducido solo funde.
+Headline hueso con relieve de cartel y subtítulo en VT323, centrado al 30 % de altura. Entra desde 4u arriba y se desvanece en `2.6s steps(13)`; con movimiento reducido solo funde. Si anuncia una sinergia, el subtítulo pasa a brasa y cae con un `slam` corto.
 
 ## Do's and Don'ts
 

@@ -8,6 +8,14 @@ const $ = (sel) => document.querySelector(sel);
 // Capa DOM: HUD, cartel de oleada y pantallas superpuestas.
 const UPGRADE_GUARD_MS = 400;
 
+// Quitar y volver a poner la clase en el mismo fotograma no relanza la animación;
+// la lectura de offsetWidth fuerza el reinicio.
+function restart(node, cls) {
+  node.classList.remove(cls);
+  void node.offsetWidth;
+  node.classList.add(cls);
+}
+
 // Compara el PPM con la partida anterior: la mejora es el motivo para volver.
 function progressText(wpm, prev) {
   if (!wpm) return '';
@@ -240,22 +248,24 @@ export function createUI(actions) {
       hearts = Array.from({ length: max }, () => {
         const h = document.createElement('i');
         h.className = 'heart';
+        h.addEventListener('animationend', () => h.classList.remove('lost', 'gained'));
         el.lives.append(h);
         return h;
       });
     }
     hearts.forEach((h, i) => {
       const empty = i >= lives;
-      if (empty && !h.classList.contains('empty')) {
-        h.classList.add('lost');
-        h.addEventListener('animationend', () => h.classList.remove('lost'), { once: true });
+      if (empty !== h.classList.contains('empty')) {
+        h.classList.remove('lost', 'gained');
+        h.classList.add(empty ? 'lost' : 'gained');
       }
       h.classList.toggle('empty', empty);
     });
     el.lives.setAttribute('aria-label', `${Math.max(0, lives)} de ${max} vidas`);
   }
 
-  const pct = (v) => `${Math.round(v * 100)}%`;
+  const fill = (meter, v) => meter.style.setProperty('--fill', String(Math.round(v * 100) / 100));
+  let multiplier = 1;
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
   const span = (className, text) => {
@@ -372,16 +382,19 @@ export function createUI(actions) {
     updateHud(game) {
       el.score.textContent = String(game.score).padStart(6, '0');
       el.wave.textContent = game.wave;
-      el.waveMeter.style.width = pct(game.waveProgress);
+      fill(el.waveMeter, game.waveProgress);
       el.waveBar.setAttribute('aria-valuenow', Math.round(game.waveProgress * 100));
       el.combo.textContent = game.combo;
-      el.comboMeter.style.width = pct(game.comboProgress);
+      fill(el.comboMeter, game.comboProgress);
       el.mult.textContent = `x${game.multiplier}`;
       el.mult.classList.toggle('hot', game.multiplier > 1);
+      // Parpadea solo al subir; después el color basta para indicar el estado.
+      if (game.multiplier > multiplier) restart(el.mult, 'bump');
+      multiplier = game.multiplier;
       el.accuracy.textContent = `${game.accuracy}%`;
       el.wpm.textContent = game.wpm;
       const ready = game.grenade >= 1;
-      el.grenadeMeter.style.width = pct(game.grenade);
+      fill(el.grenadeMeter, game.grenade);
       el.grenadeBar.setAttribute('aria-valuenow', Math.round(game.grenade * 100));
       el.grenadeBar.setAttribute('aria-label', ready ? 'Granada lista: pulsa Enter' : 'Carga de la granada');
       el.grenadeKey.classList.toggle('hidden', !ready);
@@ -391,12 +404,12 @@ export function createUI(actions) {
       const boss = game.bossHealth;
       el.boss.classList.toggle('hidden', boss === null);
       if (boss !== null) {
-        el.bossMeter.style.width = pct(boss);
+        fill(el.bossMeter, boss);
         el.bossBar.setAttribute('aria-valuenow', Math.round(boss * 100));
       }
     },
 
-    banner(title, sub) {
+    banner(title, sub, { synergy = false } = {}) {
       if (guided) {
         $('#guided-status').textContent = `${title}. ${sub}`;
         return;
@@ -408,9 +421,8 @@ export function createUI(actions) {
       s.className = 'banner-sub';
       s.textContent = sub;
       el.banner.replaceChildren(t, s);
-      el.banner.classList.remove('show');
-      void el.banner.offsetWidth; // reinicia la animación
-      el.banner.classList.add('show');
+      el.banner.classList.toggle('synergy', synergy);
+      restart(el.banner, 'show');
     },
 
     clearBanner() {

@@ -159,8 +159,8 @@ function startGame(key) {
       if (changed) sub = `${MAPS[renderer.map].name} · ${sub}`;
       // La sinergia recién activada ocupa el subtítulo: es lo que hay que celebrar.
       if (synergy) sub = `Sinergia ${SYNERGIES[synergy].name}. ${SYNERGIES[synergy].desc}`;
+      ui.banner(boss ? `JEFE · OLEADA ${wave}` : `OLEADA ${wave}`, sub, { synergy: Boolean(synergy) });
       synergy = null;
-      ui.banner(boss ? `JEFE · OLEADA ${wave}` : `OLEADA ${wave}`, sub);
       ui.updateHud(g);
       sfx.wave();
     },
