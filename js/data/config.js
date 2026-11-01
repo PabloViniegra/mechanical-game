@@ -149,6 +149,9 @@ export const WAVES = {
 };
 // Altura aproximada del mundo en píxeles de arte; se escala por un entero.
 export const PIXEL_HEIGHT = 200;
+// Ancho mínimo del mundo: la etiqueta más larga (una frase de jefe, 108 px)
+// debe caber y quedar recorrido entre la aparición y la barricada.
+export const MIN_VIEW_WIDTH = 160;
 
 export const COMBO_STEP = 15;
 export const MAX_MULTIPLIER = 5;

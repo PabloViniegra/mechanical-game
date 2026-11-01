@@ -1,7 +1,7 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../js/core/game.js';
-import { updateView } from '../js/core/view.js';
+import { updateView, view } from '../js/core/view.js';
 import { createZombie } from '../js/core/zombie.js';
 import { GUIDED } from '../js/data/config.js';
 import { EMPTY_PROGRESS, recordProgress } from '../js/core/progress.js';
@@ -92,4 +92,24 @@ test('el modo guiado recorre las palabras de un jefe y sus corredores divididos'
 test('los resultados guiados no alteran el progreso arcade', () => {
   const prev = recordProgress(EMPTY_PROGRESS, { wpm: 20, accuracy: 90, diffKey: 'facil', time: 60 });
   assert.equal(recordProgress(prev, { wpm: 90, accuracy: 100, diffKey: 'facil', time: 60, guided: true }), prev);
+});
+
+test('en el modo guiado el zombi aparece dentro de la pantalla y se fija con aviso', () => {
+  let locks = 0;
+  const game = new Game('normal', { lock: () => locks++ }, { guided: true });
+  game.start();
+  game.update(0.1);
+  assert.ok(game.target);
+  assert.ok(game.target.x + game.target.w / 2 <= view.w);
+  assert.equal(locks, 1);
+});
+
+test('la vida perdida en guiado no notifica cambios después del final', () => {
+  const events = [];
+  const record = (name) => () => events.push(name);
+  const game = new Game('pesadilla', { change: record('change'), over: record('over') }, { guided: true });
+  game.lives = 1;
+  game.zombies.push(createZombie('walker', 'uña', 10));
+  for (let i = 0; i < GUIDED.missesPerLife; i++) game.type('x');
+  assert.equal(events.at(-1), 'over');
 });

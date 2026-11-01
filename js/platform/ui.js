@@ -138,18 +138,28 @@ export function createUI(actions) {
   $('#guided-pause').addEventListener('click', actions.pause);
   $('#guided-grenade').addEventListener('click', actions.grenade);
   const guidedInput = $('#guided-input');
-  guidedInput.addEventListener('input', (e) => {
-    if (e.isComposing) return;
+  const typeGuided = () => {
     const value = fold(guidedInput.value);
     guidedInput.value = '';
     for (const letter of value) {
       if (/^[a-zñ ]$/.test(letter)) actions.type(letter);
     }
+  };
+  // Con IME o tecla muerta, la letra compuesta se confirma en compositionend:
+  // Chrome marca el último `input` como aún en composición.
+  guidedInput.addEventListener('input', (e) => {
+    if (!e.isComposing) typeGuided();
   });
+  guidedInput.addEventListener('compositionend', typeGuided);
   guidedInput.addEventListener('keydown', (e) => {
+    // Como en el teclado global: mantener una tecla no es teclear.
+    if (e.repeat) {
+      e.preventDefault();
+      return;
+    }
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (!e.repeat) actions.grenade();
+      actions.grenade();
     }
   });
   $('#retry').addEventListener('click', actions.retry);
@@ -378,6 +388,17 @@ export function createUI(actions) {
     // Toda la interfaz se mide en píxeles de arte para compartir rejilla con el canvas.
     setPixelSize(px) {
       document.documentElement.style.setProperty('--u', `${px}px`);
+    },
+
+    // El renderer necesita la altura del HUD para no esconder etiquetas debajo.
+    // El CSS la usa para colocar los avisos de logro bajo el HUD.
+    onHudResize(callback) {
+      if (typeof ResizeObserver !== 'function') return;
+      new ResizeObserver(() => {
+        const height = el.hud.offsetHeight;
+        document.documentElement.style.setProperty('--hud-h', `${height}px`);
+        callback(height);
+      }).observe(el.hud);
     },
 
     setHudVisible(visible) {

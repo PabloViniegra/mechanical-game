@@ -39,6 +39,7 @@ let previousProgress = progress;
 let lastRecord = false;
 let hudTimer = 0;
 let lastBeat = 0;
+let hudHeight = 0;
 const demo = createDemo();
 
 // Momentos de la partida que solo suenan.
@@ -96,7 +97,8 @@ const ui = createUI({
 });
 ui.setRecord(record, progress);
 ui.setAchievements(achievements);
-ui.setPixelSize(view.scale);
+ui.setPixelSize(renderer.pixelSize);
+ui.onHudResize((height) => { hudHeight = height; });
 applySettings();
 ui.showScreen('start');
 const keyboardGate = createKeyboardGate();
@@ -148,7 +150,8 @@ function closeAchievements() {
 // Guarda lo que lleva la partida: se llama al desbloquear, al perder y al abandonar.
 function saveTracker() {
   if (!tracker) return;
-  achievements = tracker.profile;
+  // Relee lo guardado: otra pestaña ha podido desbloquear o contar entretanto.
+  achievements = tracker.sync(loadAchievements());
   saveAchievements(achievements);
   ui.setAchievements(achievements);
 }
@@ -274,6 +277,10 @@ function endGame(_, g) {
   tracker = null;
   music.stop();
   sfx.gameOver();
+  // Otra pestaña ha podido guardar un récord o progreso mientras se jugaba aquí.
+  record = Math.max(record, loadRecord());
+  const stored = loadProgress();
+  if (stored.games >= progress.games) progress = stored;
   const isRecord = !g.guided && g.score > record;
   lastRecord = isRecord;
   if (isRecord) {
@@ -334,14 +341,17 @@ bindKeyboard({
 window.addEventListener('pagehide', saveTracker);
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && state === 'playing') pause();
+  // También en la pantalla de mejoras: si no, la música de partida seguiría sonando.
+  if (document.hidden && (state === 'playing' || state === 'upgrade')) pause();
   // En segundo plano los temporizadores se ralentizan y el secuenciador tartamudearía.
   if (document.hidden) menuMusic.pause();
   else if (inMenu()) menuMusic.start();
 });
 window.addEventListener('resize', () => {
+  const fromSpawnX = view.spawnX;
   renderer.resize();
-  ui.setPixelSize(view.scale);
+  ui.setPixelSize(renderer.pixelSize);
+  if (game && view.spawnX !== fromSpawnX) game.resize(fromSpawnX);
 });
 
 let last = performance.now();
@@ -375,6 +385,7 @@ function frame(now) {
   renderer.render(state === 'menu' || !game ? demo : game, now / 1000, {
     labels: state === 'playing',
     shake: settings.shake,
+    hudHeight,
   });
   requestAnimationFrame(frame);
 }

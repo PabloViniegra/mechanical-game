@@ -49,8 +49,9 @@ test('una oleada limpia desbloquea Intocable, Pulso de cirujano y Racha perfecta
 
 test('un fallo impide la precisión perfecta, pero no Intocable', () => {
   const { game, unlocked } = play();
+  game.zombies.push(createZombie('walker', 'tumba', 10));
   game.type('x');
-  kill(game, 'tumba');
+  [...'tumba'].forEach((c) => game.type(c));
   game.update(1);
   assert.ok(unlocked.includes('untouchable'));
   assert.ok(!unlocked.includes('surgeon') && !unlocked.includes('perfectWave'));
@@ -98,8 +99,9 @@ test('Palabra larga pide más de 12 letras', () => {
 
 test('los contadores acumulados continúan desde el perfil guardado', () => {
   const { game, tracker, unlocked } = play({ profile: { kills: 99, misses: 99, games: 9 } });
+  game.zombies.push(createZombie('walker', 'tumba', 10));
   game.type('x');
-  kill(game, 'tumba');
+  [...'tumba'].forEach((c) => game.type(c));
   assert.ok(unlocked.includes('kills100') && unlocked.includes('clumsy'));
   assert.ok(!unlocked.includes('games10'));
   game.lives = 1;
@@ -285,4 +287,24 @@ test('mejoras: sinergia, tres malditas y Segunda oportunidad', () => {
   breach(game);
   assert.ok(!game.over);
   assert.ok(unlocked.includes('lazarus'));
+});
+
+test('guardar funde lo que otra pestaña guardó entretanto sin perder lo propio', () => {
+  const [mine, theirs] = ACHIEVEMENTS.filter((x) => !x.stat).map((x) => x.id);
+  const { tracker } = play({ profile: { misses: 5, unlocked: [mine] } });
+  tracker.handle('miss');
+  tracker.handle('miss');
+  const merged = tracker.sync(sanitizeProfile({ misses: 50, unlocked: [theirs] }));
+  assert.equal(merged.misses, 52);
+  assert.deepEqual(new Set(merged.unlocked), new Set([mine, theirs]));
+  // Sin almacenamiento lo leído llega vacío: no debe borrar lo de esta sesión.
+  tracker.handle('miss');
+  assert.equal(tracker.sync(sanitizeProfile(null)).misses, 53);
+});
+
+test('la racha de días continúa la que otra pestaña guardó el día anterior', () => {
+  const { tracker } = play({ profile: { lastDay: 8, days: 3 }, day: 10 });
+  const merged = tracker.sync(sanitizeProfile({ lastDay: 9, days: 4 }));
+  assert.equal(merged.lastDay, 10);
+  assert.equal(merged.days, 5);
 });

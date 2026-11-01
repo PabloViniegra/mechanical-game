@@ -8,9 +8,9 @@ export function pickWeighted(items, weight) {
 }
 export const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
-// Quita tildes y diéresis, pero conserva la ñ.
+// Quita tildes y diéresis, pero conserva la ñ (también si llega descompuesta).
 export const fold = (s) =>
-  s.toLowerCase().replace(/ñ/g, '\0').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\0/g, 'ñ');
+  s.normalize('NFC').toLowerCase().replace(/ñ/g, '\0').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\0/g, 'ñ');
 
 // PRNG determinista para que el escenario no cambie al redimensionar.
 export function seeded(seed) {

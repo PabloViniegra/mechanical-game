@@ -83,4 +83,21 @@ export const isPickup = (z) => Boolean(z.type.pickup);
 export const frameIndex = (z) => Math.floor(z.anim) % 4;
 export const footY = (z) => laneY(z.lane);
 export const chestY = (z) => footY(z) - Math.round(z.h * 0.6);
-export const reachedBarricade = (z) => z.x - z.w / 2 <= view.barricadeX + 3;
+const REACH = 3; // margen del golpe por delante de la barricada
+const reachX = () => view.barricadeX + REACH;
+
+// Tras redimensionar, conserva la fracción de recorrido y el tiempo que falta
+// hasta el golpe; se mide desde el borde delantero, que es lo que golpea.
+// `fromSpawnX` es el punto de aparición anterior.
+export function rescaleZombies(zombies, fromSpawnX) {
+  const k = (view.spawnX - reachX()) / (fromSpawnX - reachX());
+  // En ventanas diminutas la aparición puede quedar tras la barricada.
+  if (!Number.isFinite(k) || k <= 0) return;
+  for (const z of zombies) {
+    const edge = z.x - z.w / 2 - reachX();
+    if (edge > 0) z.x = reachX() + z.w / 2 + edge * k;
+    z.speed *= k;
+  }
+}
+
+export const reachedBarricade = (z) => z.x - z.w / 2 <= reachX();

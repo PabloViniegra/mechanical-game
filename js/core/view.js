@@ -1,4 +1,4 @@
-import { PIXEL_HEIGHT } from '../data/config.js';
+import { PIXEL_HEIGHT, MIN_VIEW_WIDTH } from '../data/config.js';
 import { PLAYER, spriteSize } from '../data/art.js';
 
 const PLAYER_SIZE = spriteSize(PLAYER.rows);
@@ -19,8 +19,10 @@ export const view = {
   spawnX: 0,
 };
 
+// Recibe el tamaño en píxeles físicos para que cada píxel de arte ocupe un
+// número entero de ellos. En pantallas estrechas se reduce la escala.
 export function updateView(screenW, screenH) {
-  const scale = Math.max(2, Math.round(screenH / PIXEL_HEIGHT));
+  const scale = Math.max(2, Math.min(Math.round(screenH / PIXEL_HEIGHT), Math.floor(screenW / MIN_VIEW_WIDTH)));
   view.scale = scale;
   view.w = Math.ceil(screenW / scale);
   view.h = Math.ceil(screenH / scale);

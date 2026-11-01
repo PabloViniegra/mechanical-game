@@ -8,6 +8,7 @@ import { view, gunTip } from './view.js';
 import { Effects } from './effects.js';
 import {
   createZombie, pickKind, pickWord, makePhrase, updateZombie, footY, chestY, reachedBarricade, isPickup,
+  rescaleZombies,
 } from './zombie.js';
 import { rand, clamp, fold, pick, pickWeighted } from './utils.js';
 
@@ -163,7 +164,7 @@ export class Game {
     this.spawnTimer = this.guided ? 0 : WAVES.firstSpawn;
     this.wireLeft = this.perk('wire');
     this.lives = Math.min(this.maxLives, this.lives + this.perk('gravedigger'));
-    if (this.level('quickfuse')) this.grenade = 1;
+    if (this.level('quickfuse')) this.charge(1);
     this.emit('wave', { wave: this.wave, total: this.waveTotal, bonus, boss: this.bossPending });
   }
 
@@ -184,8 +185,20 @@ export class Game {
     const word = phrase ? makePhrase(this.zombies) : pickWord(this.wordsFor(kind), this.zombies);
     const z = createZombie(kind, word, this.speedFor(kind));
     if (this.level('flare')) z.masked = false;
+    this.place(z);
     this.zombies.push(z);
     this.emit('spawn', z);
+  }
+
+  // En el modo guiado nadie avanza: hay que aparecer ya dentro de la pantalla.
+  place(z) {
+    if (this.guided) z.x = Math.min(z.x, view.w - z.w / 2 - 2);
+  }
+
+  // La vista cambió de tamaño; `fromSpawnX` es el punto de aparición anterior.
+  resize(fromSpawnX) {
+    rescaleZombies(this.zombies, fromSpawnX);
+    for (const z of this.zombies) this.place(z);
   }
 
   wordsFor(kind) {
@@ -203,6 +216,7 @@ export class Game {
     z.parts = parts;
     z.part = 0;
     z.lane = 0.5;
+    this.place(z);
     this.zombies.push(z);
     this.emit('spawn', z);
   }
@@ -221,7 +235,8 @@ export class Game {
       for (const cand of this.zombies) {
         if (!cand.dead && cand.folded[cand.typed] === c && (!z || cand.x < z.x)) z = cand;
       }
-      if (!z) return c === ' ' ? undefined : this.miss(null, c);
+      // Sin nada a lo que disparar, una tecla suelta no es un error.
+      if (!z) return c === ' ' || !this.zombies.some((o) => !o.dead && !o.gone) ? undefined : this.miss(null, c);
       this.target = z;
       this.emit('lock', z);
     }
@@ -248,6 +263,7 @@ export class Game {
   selectGuidedTarget() {
     if (!this.target || this.target.dead || this.target.gone) {
       this.target = this.zombies.find((z) => !z.dead && !z.gone) ?? null;
+      if (this.target) this.emit('lock', this.target);
     }
     if (this.target) this.target.masked = false;
   }
@@ -278,12 +294,11 @@ export class Game {
       this.missedKeys[key] = (this.missedKeys[key] ?? 0) + 1;
     }
     this.emit('miss', z);
-    if (this.guided && z) {
-      this.guidedMisses++;
-      if (this.guidedMisses === GUIDED.missesPerLife) {
-        this.guidedMisses = 0;
-        this.damage(z, 1);
-      }
+    if (this.guided && z && ++this.guidedMisses === GUIDED.missesPerLife) {
+      this.guidedMisses = 0;
+      // damage() ya notifica el cambio (y quizá el final de la partida).
+      this.damage(z, 1);
+      return;
     }
     this.emit('change');
   }
@@ -415,6 +430,7 @@ export class Game {
       const child = createZombie('runner', pickWord(WORDS.short, this.zombies, reserved), this.speedFor('runner'));
       child.x = x + i * 10;
       child.lane = clamp(z.lane + (i - (n - 1) / 2) * 0.3, 0, 1);
+      this.place(child);
       this.zombies.push(child);
       this.emit('spawn', child);
     }
@@ -484,7 +500,8 @@ export class Game {
   }
 
   damage(z, amount) {
-    this.lives -= amount;
+    // El golpe del jefe quita varias: las vidas nunca bajan de cero.
+    this.lives = Math.max(0, this.lives - amount);
     this.clean = false;
     if (!this.level('steady')) this.combo = 0;
     this.shake = 0.4;
@@ -523,7 +540,8 @@ export class Game {
       if (this.spawnTimer <= 0) {
         this.spawn();
         this.toSpawn--;
-        this.spawnTimer = this.guided ? 0 : Math.max(WAVES.spawnMin, WAVES.spawnStart - this.wave * WAVES.spawnStep)
+        // El sobrante del fotograma se descuenta: la cadencia no depende de los fps.
+        this.spawnTimer = this.guided ? 0 : this.spawnTimer + Math.max(WAVES.spawnMin, WAVES.spawnStart - this.wave * WAVES.spawnStep)
           * this.diff.spawn * rand(0.7, 1.3);
       }
     }

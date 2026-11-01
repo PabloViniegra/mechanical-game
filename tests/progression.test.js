@@ -233,3 +233,14 @@ test('perforante hace que cada rebote arranque una letra más', () => {
   typeWord(game, 'tos');
   assert.equal(other.typed, 2);
 });
+
+test('Mecha corta avisa de que la granada está lista al empezar la oleada', () => {
+  let ready = 0;
+  const game = new Game('normal', { ready: () => ready++ });
+  game.perks.quickfuse = 1;
+  game.start();
+  assert.equal(game.grenade, 1);
+  assert.equal(ready, 1);
+  game.nextWave(0);
+  assert.equal(ready, 1);
+});

@@ -11,6 +11,9 @@ const COUNTED = ACHIEVEMENTS.filter((a) => a.stat && a.stat !== 'collection');
 // Coleccionista se mide sobre el resto para no contarse a sí mismo.
 const COLLECTABLE = ACHIEVEMENTS.filter((a) => a.stat !== 'collection');
 
+const COUNTERS = ['kills', 'misses', 'games'];
+const clone = (p) => ({ ...p, unlocked: [...p.unlocked], kinds: [...p.kinds] });
+
 const count = (v) => (Number.isSafeInteger(v) && v >= 0 ? v : 0);
 const known = (list, valid) => (Array.isArray(list) ? [...new Set(list.filter((v) => valid.has(v)))] : []);
 
@@ -38,7 +41,9 @@ export const collection = (unlocked) =>
 export class AchievementTracker {
   // `day` es el día de juego (dayNumber); `onUnlock` recibe la definición del logro.
   constructor(profile, game, { day = 0, onUnlock = () => {} } = {}) {
-    this.profile = { ...profile, unlocked: [...profile.unlocked], kinds: [...profile.kinds] };
+    this.profile = clone(profile);
+    // Lo ya guardado: `sync` solo suma lo conseguido desde entonces.
+    this.base = clone(profile);
     this.unlocked = new Set(profile.unlocked);
     this.game = game;
     this.onUnlock = onUnlock;
@@ -61,6 +66,31 @@ export class AchievementTracker {
       p.lastDay = day;
     }
     this.check();
+  }
+
+  // Funde el perfil con lo guardado mientras tanto (por ejemplo, en otra
+  // pestaña) y devuelve el resultado, que pasa a ser la nueva base. Los
+  // contadores parten del mayor de los dos: si el almacenamiento falla, lo
+  // leído llega vacío y no debe borrar lo de esta sesión.
+  sync(stored) {
+    const p = this.profile;
+    // La racha de esta partida se calculó con el perfil de cuando empezó: si
+    // otra pestaña jugó el día anterior, la continúa.
+    let days = p.days;
+    if (p.lastDay < stored.lastDay) days = stored.days;
+    else if (p.lastDay === stored.lastDay) days = Math.max(p.days, stored.days);
+    else if (p.lastDay === stored.lastDay + 1) days = Math.max(p.days, stored.days + 1);
+    const merged = {
+      unlocked: [...new Set([...stored.unlocked, ...p.unlocked])],
+      kinds: [...new Set([...stored.kinds, ...p.kinds])],
+      lastDay: Math.max(p.lastDay, stored.lastDay),
+      days,
+    };
+    for (const key of COUNTERS) merged[key] = Math.max(stored[key], this.base[key]) + p[key] - this.base[key];
+    this.profile = merged;
+    this.base = clone(merged);
+    this.unlocked = new Set(merged.unlocked);
+    return clone(merged);
   }
 
   has(id) {

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { updateView, view } from '../js/core/view.js';
 import { fold } from '../js/core/utils.js';
 import { createZombie, pickWord, makePhrase } from '../js/core/zombie.js';
-import { WORDS, PHRASES, UPGRADES, WAVES } from '../js/data/config.js';
+import { WORDS, PHRASES, UPGRADES, WAVES, MIN_VIEW_WIDTH } from '../js/data/config.js';
 import { Game } from '../js/core/game.js';
 import { EMPTY_PROGRESS, sanitizeProgress, recordProgress } from '../js/core/progress.js';
 
@@ -15,6 +15,81 @@ test('fold quita tildes y diéresis pero conserva la ñ', () => {
   assert.equal(fold('Ataúd'), 'ataud');
   assert.equal(fold('pingüino'), 'pinguino');
   assert.equal(fold('Uña'), 'uña');
+  // Pegada desde macOS o un IME, la ñ llega como n + tilde combinada.
+  assert.equal(fold('Uña'.normalize('NFD')), 'uña');
+});
+
+test('en pantallas estrechas el mundo conserva un ancho mínimo', () => {
+  updateView(360, 740);
+  assert.ok(view.w >= MIN_VIEW_WIDTH);
+});
+
+test('al redimensionar, los zombis mantienen su recorrido y su tiempo hasta la barricada', () => {
+  const game = new Game('normal');
+  game.start();
+  const far = createZombie('walker', 'hueso', 20);
+  far.x = view.barricadeX + (view.spawnX - view.barricadeX) / 2;
+  // A punto de golpear, pero aún no: encoger la ventana no debe adelantar el golpe.
+  const near = createZombie('walker', 'tumba', 20);
+  near.x = view.barricadeX + near.w / 2 + 5;
+  game.zombies.push(far, near);
+  const eta = (z) => (z.x - z.w / 2 - view.barricadeX - 3) / z.speed;
+  const before = [far, near].map(eta);
+  const from = view.spawnX;
+  updateView(800, 600);
+  game.resize(from);
+  [far, near].forEach((z, i) => assert.ok(Math.abs(eta(z) - before[i]) < 1e-9));
+  game.update(0.01);
+  assert.equal(game.lives, 3);
+});
+
+test('redimensionar a una ventana diminuta no deja posiciones imposibles', () => {
+  const game = new Game('normal');
+  game.start();
+  const z = createZombie('walker', 'hueso', 20);
+  game.zombies.push(z);
+  const from = view.spawnX;
+  updateView(64, 400);
+  game.resize(from);
+  assert.ok(Number.isFinite(z.x) && z.speed > 0);
+});
+
+test('una tecla sin zombis en pantalla no es un fallo', () => {
+  const game = new Game('normal');
+  game.start();
+  game.type('x');
+  assert.equal(game.misses, 0);
+  assert.equal(game.accuracy, 100);
+});
+
+test('el golpe del jefe no deja las vidas por debajo de cero', () => {
+  const game = new Game('normal');
+  game.start();
+  game.lives = 1;
+  const boss = createZombie('boss', 'abominable', 10);
+  boss.parts = ['abominable'];
+  boss.part = 0;
+  boss.x = view.barricadeX;
+  game.zombies.push(boss);
+  game.update(0.016);
+  assert.ok(game.over);
+  assert.equal(game.lives, 0);
+});
+
+test('la cadencia de aparición no depende de la tasa de fotogramas', (t) => {
+  t.mock.method(Math, 'random', () => 0.37);
+  const spawnTimes = (fps) => {
+    const times = [];
+    const game = new Game('normal', { spawn: (_, g) => times.push(g.time) });
+    game.start();
+    game.lives = Infinity;
+    for (let i = 0; i < fps * 30 && !game.offer; i++) game.update(1 / fps);
+    return times;
+  };
+  const slow = spawnTimes(30);
+  const fast = spawnTimes(144);
+  assert.equal(slow.length, fast.length);
+  slow.forEach((time, i) => assert.ok(Math.abs(time - fast[i]) <= 1 / 30 + 1e-9, `aparición ${i}`));
 });
 
 test('pickWord evita palabras e iniciales que ya están en pantalla', () => {
@@ -363,6 +438,7 @@ test('las mejoras malditas cobran su precio', () => {
   game.score = 100;
   game.combo = 200;
   assert.equal(game.multiplier, 7);
+  game.zombies.push(createZombie('walker', 'hueso', 10));
   game.type('#');
   assert.equal(game.score, 50);
 });

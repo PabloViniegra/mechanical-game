@@ -924,6 +924,11 @@ kbd {
   animation: toast 4s steps(16) forwards;
 }
 
+/* En pantallas pequeñas abajo taparían los carriles: pasan al cielo, bajo el HUD. */
+@media (max-width: 560px), (max-height: 500px) {
+  .toasts { top: calc(var(--hud-h, 0px) + var(--u) * 2); bottom: auto; }
+}
+
 .toast-title { color: var(--sick); }
 .toast-name { font-family: var(--pixel); font-size: var(--fs-s); line-height: 1.3; color: var(--bone); }
 

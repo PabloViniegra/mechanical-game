@@ -45,9 +45,11 @@ export class Renderer {
 
   resize() {
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-    updateView(window.innerWidth, window.innerHeight);
     this.canvas.width = Math.round(window.innerWidth * this.dpr);
     this.canvas.height = Math.round(window.innerHeight * this.dpr);
+    // Con un escalado del 150 % una escala entera en píxeles CSS daría
+    // columnas de 7 y 8 píxeles físicos; se escala sobre los físicos.
+    updateView(this.canvas.width, this.canvas.height);
     this.buffer.width = view.w;
     this.buffer.height = view.h;
     paintBackground(this.bg, MAPS[this.map]);
@@ -60,10 +62,17 @@ export class Renderer {
     return true;
   }
 
+  // Tamaño de un píxel de arte en píxeles CSS, para alinear el DOM con el canvas.
+  get pixelSize() {
+    return view.scale / this.dpr;
+  }
+
   // scene: { zombies, effects, target, lives, maxLives, shake, hurtFlash, missFlash, muzzle, weak }
-  render(scene, t, { labels = false, shake = true } = {}) {
+  // `hudHeight` (px CSS) es la franja opaca de arriba donde no caben etiquetas.
+  render(scene, t, { labels = false, shake = true, hudHeight = 0 } = {}) {
     const b = this.bctx;
     this.weak = scene.weak;
+    this.labelTop = Math.ceil((hudHeight * this.dpr) / view.scale) + 1;
     b.drawImage(this.bg, 0, 0);
     this.drawMist(b, t);
     this.drawBarricade(b, scene.lives / scene.maxLives);
@@ -96,7 +105,7 @@ export class Renderer {
       oy = Math.round(this.shakeDir[1] * k);
     }
     const ctx = this.ctx;
-    const px = view.scale * this.dpr;
+    const px = view.scale;
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = C.ink;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -227,21 +236,45 @@ export class Renderer {
     const masked = z.masked && !isTarget;
     const pointer = isTarget ? 2 : 0;
 
-    let x = Math.round(z.x - boxW / 2);
-    x = clamp(x, 1, view.w - boxW - 1);
-    if (z.shake > 0 && !this.reducedMotion) x += Math.floor(z.shake * 40) % 2 ? 1 : -1;
-    let y = footY(z) - z.h - 3 - boxH - pointer;
-    // Desplaza hacia arriba las etiquetas que se pisan, priorizando el objetivo.
-    let previous;
-    do {
-      previous = y;
-      for (const other of placed) {
-        if (x < other.x + other.w && x + boxW > other.x && y < other.y + other.h && y + boxH > other.y) {
-          y = other.y - boxH - 2;
+    const maxX = Math.max(1, view.w - boxW - 1);
+    const center = Math.round(z.x - boxW / 2);
+    const top = this.labelTop;
+    const start = Math.max(top, footY(z) - z.h - 3 - boxH - pointer);
+    const jitter = z.shake > 0 && !this.reducedMotion ? (Math.floor(z.shake * 40) % 2 ? 1 : -1) : 0;
+    // Aparta las etiquetas que se pisan, priorizando el objetivo: primero hacia
+    // arriba y, si chocarían con el HUD, hacia abajo; sin hueco en la columna,
+    // prueba media caja a cada lado.
+    let x;
+    const stack = (dir) => {
+      let y = start;
+      let previous;
+      do {
+        previous = y;
+        for (const other of placed) {
+          if (x < other.x + other.w && x + boxW > other.x && y < other.y + other.h && y + boxH > other.y) {
+            y = dir < 0 ? other.y - boxH - 2 : other.y + other.h + 2;
+          }
         }
+      } while (y !== previous);
+      return y;
+    };
+    const fits = (y) => y >= top && y + boxH <= view.h - 1;
+    let y = null;
+    for (const shift of [0, 0.5, -0.5, 1, -1]) {
+      x = clamp(center + Math.round(shift * boxW), 1, maxX);
+      const up = stack(-1);
+      const found = fits(up) ? up : stack(1);
+      if (fits(found)) {
+        y = found;
+        break;
       }
-    } while (y !== previous);
-    y = Math.max(1, y);
+    }
+    // Sin hueco libre se pisa con otra antes que salir de la pantalla.
+    if (y === null) {
+      x = clamp(center, 1, maxX);
+      y = start;
+    }
+    x += jitter;
     placed.push({ x, y, w: boxW, h: boxH });
     if (!draw) return;
 
