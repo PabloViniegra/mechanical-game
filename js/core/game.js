@@ -260,6 +260,18 @@ export class Game {
     this.emit('change');
   }
 
+  // Soltar no es fallo ni rompe la racha; el coste es que el zombi vuelve a
+  // avanzar, mutar o caducar como cualquier otro. En el modo guiado el
+  // objetivo lo elige el juego.
+  releaseTarget() {
+    if (this.over || this.offer || this.guided || !this.target) return false;
+    const z = this.target;
+    this.target = null;
+    this.emit('release', z);
+    this.emit('change');
+    return true;
+  }
+
   selectGuidedTarget() {
     if (!this.target || this.target.dead || this.target.gone) {
       this.target = this.zombies.find((z) => !z.dead && !z.gone) ?? null;

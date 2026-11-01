@@ -1,7 +1,7 @@
 import { fold } from '../core/utils.js';
 
 // Traduce el teclado en acciones según el estado actual del juego.
-export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, onOptions, onAchievements }) {
+export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, onRelease, onOptions, onAchievements }) {
   window.addEventListener('keydown', (e) => {
     const state = getState();
     if (e.key === 'Escape') {
@@ -43,6 +43,12 @@ export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, o
     if (e.key === 'Enter') {
       e.preventDefault();
       onGrenade();
+      return;
+    }
+    // Tab solo se queda la tecla si había objetivo que soltar: sin él, y en
+    // el modo guiado, sigue moviendo el foco para poder volver a los controles.
+    if (e.key === 'Tab' && !e.shiftKey && plain) {
+      if (onRelease()) e.preventDefault();
       return;
     }
     // 'Dead' (tecla muerta de tildes) y otras teclas especiales tienen nombres largos.

@@ -46,6 +46,7 @@ const demo = createDemo();
 const sounds = {
   spawn: () => { if (Math.random() < 0.4) sfx.groan(); },
   lock: sfx.lock,
+  release: sfx.release,
   shoot: sfx.shoot,
   miss: sfx.miss,
   kill: sfx.kill,
@@ -320,6 +321,7 @@ bindKeyboard({
   getState: () => state,
   onChar: (c) => game.type(c),
   onGrenade: throwGrenade,
+  onRelease: () => game.releaseTarget(),
   onEscape: (s) => {
     if (s === 'playing' || s === 'upgrade') pause();
     else if (s === 'paused') resume();

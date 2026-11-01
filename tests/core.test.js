@@ -120,6 +120,27 @@ test('un fallo rompe la racha sin perder el objetivo', () => {
   assert.equal(game.target, z);
 });
 
+test('soltar el objetivo permite fijar otro sin fallo y la palabra soltada conserva su avance', () => {
+  const released = [];
+  const game = new Game('normal', { release: (z) => released.push(z.word) });
+  const near = createZombie('walker', 'cripta', 10);
+  const urgent = createZombie('walker', 'hueso', 10);
+  near.x = 100;
+  urgent.x = 200;
+  game.zombies.push(near, urgent);
+  assert.equal(game.releaseTarget(), false);
+  typeWord(game, 'cri');
+  assert.equal(game.releaseTarget(), true);
+  assert.deepEqual(released, ['cripta']);
+  typeWord(game, 'hueso');
+  assert.ok(urgent.dead);
+  assert.equal(game.misses, 0);
+  assert.equal(game.combo, 8);
+  typeWord(game, 'pta');
+  assert.ok(near.dead);
+  assert.equal(game.misses, 0);
+});
+
 test('la partida termina cuando los zombis agotan las vidas', () => {
   let over = 0;
   const game = new Game('pesadilla', { over: () => over++ });

@@ -68,6 +68,7 @@ export const sfx = {
     if (ac.state === 'suspended') ac.resume();
   },
   lock() { tone(1200, 0.04, 'square', 0.03); },
+  release() { tone(600, 0.05, 'square', 0.03, -200); },
   shoot() { noise(0.07, 0.35, 2200); tone(900, 0.05, 'square', 0.03, -500); },
   kill() { noise(0.2, 0.3, 500); tone(140, 0.3, 'square', 0.1, -90); },
   miss() { tone(95, 0.12, 'square', 0.07); },

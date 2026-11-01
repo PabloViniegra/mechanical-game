@@ -113,3 +113,14 @@ test('la vida perdida en guiado no notifica cambios después del final', () => {
   for (let i = 0; i < GUIDED.missesPerLife; i++) game.type('x');
   assert.equal(events.at(-1), 'over');
 });
+
+test('en el modo guiado soltar el objetivo no hace nada', () => {
+  const released = [];
+  const game = new Game('normal', { release: (z) => released.push(z) }, { guided: true });
+  const z = createZombie('walker', 'uña', 10);
+  game.zombies.push(z);
+  game.type('u');
+  assert.equal(game.releaseTarget(), false);
+  assert.equal(game.target, z);
+  assert.deepEqual(released, []);
+});
