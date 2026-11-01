@@ -1,7 +1,7 @@
 import { fold } from '../core/utils.js';
 
 // Traduce el teclado en acciones según el estado actual del juego.
-export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, onOptions }) {
+export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, onOptions, onAchievements }) {
   window.addEventListener('keydown', (e) => {
     const state = getState();
     if (e.key === 'Escape') {
@@ -19,6 +19,10 @@ export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, o
     }
     if (state === 'menu' && e.key.toLowerCase() === 'o') {
       onOptions();
+      return;
+    }
+    if (state === 'menu' && e.key.toLowerCase() === 'l') {
+      onAchievements();
       return;
     }
     if (state !== 'playing') return;

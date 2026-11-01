@@ -236,3 +236,69 @@ export const DEFAULT_SETTINGS = {
   guided: false,
   difficulty: 'normal',
 };
+
+// Logros del jugador, guardados aparte del progreso.
+export const ACHIEVEMENTS_KEY = 'teclado-zombie-achievements';
+
+// Reglas de los logros que no son un simple umbral. El PPM solo cuenta desde
+// `wpmMinTime` segundos: al principio unos pocos aciertos lo disparan.
+// `lastMoment` son los píxeles de arte que separan al zombi de la barricada.
+export const ACHIEVEMENT_RULES = {
+  wpmMinTime: 30,
+  burst: { kills: 5, seconds: 3 },
+  lastMoment: 12,
+  longWord: 12,
+  minimalist: 10,
+  perfectRun: 10,
+  pacifist: { wave: 1, idle: 30 },
+  grenadier: 4,
+  looter: 5,
+  devilPact: 3,
+  nightmare: 10,
+};
+
+// `stat` + `goal`: se desbloquea al alcanzar ese valor. `collection` es el
+// porcentaje del resto de logros. Los demás se comprueban en core/achievements.js.
+export const ACHIEVEMENTS = [
+  { id: 'wave5', name: 'Superviviente I', desc: 'Llega a la oleada 5.', stat: 'wave', goal: 5 },
+  { id: 'wave10', name: 'Superviviente II', desc: 'Llega a la oleada 10.', stat: 'wave', goal: 10 },
+  { id: 'wave25', name: 'Superviviente III', desc: 'Llega a la oleada 25.', stat: 'wave', goal: 25 },
+  { id: 'wave50', name: 'Superviviente IV', desc: 'Llega a la oleada 50.', stat: 'wave', goal: 50 },
+  { id: 'untouchable', name: 'Intocable', desc: 'Completa una oleada sin que ningún zombi te alcance.' },
+  { id: 'marathon', name: 'Maratón', desc: 'Sobrevive 10 minutos en una sola partida.', stat: 'time', goal: 600 },
+  { id: 'surgeon', name: 'Pulso de cirujano', desc: 'Completa una oleada con un 100 % de precisión.' },
+  { id: 'flawless', name: 'Sin fallos', desc: 'Escribe 50 palabras seguidas sin un solo error.', stat: 'clean', goal: 50 },
+  { id: 'clumsy', name: 'Dedos torpes', desc: 'Comete 100 errores en total. Alguien tenía que hacerlo.', stat: 'misses', goal: 100 },
+  { id: 'wpm60', name: 'Rayo I', desc: 'Alcanza 60 PPM tras 30 segundos de partida.', stat: 'wpm', goal: 60 },
+  { id: 'wpm90', name: 'Rayo II', desc: 'Alcanza 90 PPM tras 30 segundos de partida.', stat: 'wpm', goal: 90 },
+  { id: 'wpm120', name: 'Rayo III', desc: 'Alcanza 120 PPM tras 30 segundos de partida.', stat: 'wpm', goal: 120 },
+  { id: 'burst', name: 'Ráfaga', desc: 'Abate 5 zombis en menos de 3 segundos.' },
+  { id: 'lastMoment', name: 'Última milésima', desc: 'Abate a un zombi cuando está a punto de alcanzarte.' },
+  { id: 'chain10', name: 'Combo x10', desc: 'Encadena 10 palabras sin fallar ni recibir daño.', stat: 'chain', goal: 10 },
+  { id: 'chain25', name: 'Combo x25', desc: 'Encadena 25 palabras sin fallar ni recibir daño.', stat: 'chain', goal: 25 },
+  { id: 'chain50', name: 'Combo x50', desc: 'Encadena 50 palabras sin fallar ni recibir daño.', stat: 'chain', goal: 50 },
+  { id: 'perfectWave', name: 'Racha perfecta', desc: 'Acaba una oleada entera sin romper la racha.' },
+  { id: 'longWord', name: 'Palabra larga', desc: 'Escribe una palabra de más de 12 letras.' },
+  { id: 'bossHunter', name: 'Cazador de jefes', desc: 'Derrota a tu primer jefe.' },
+  { id: 'bestiary', name: 'Bestiario', desc: 'Abate a cada tipo de zombi al menos una vez.' },
+  { id: 'kills100', name: 'Genocida I', desc: 'Acumula 100 zombis abatidos.', stat: 'kills', goal: 100 },
+  { id: 'kills1000', name: 'Genocida II', desc: 'Acumula 1000 zombis abatidos.', stat: 'kills', goal: 1000 },
+  { id: 'kills10000', name: 'Genocida III', desc: 'Acumula 10 000 zombis abatidos.', stat: 'kills', goal: 10000 },
+  { id: 'minimalist', name: 'Minimalista', desc: 'Llega a la oleada 10 sin coger mejoras.' },
+  { id: 'phoenix', name: 'Fénix', desc: 'Supera una oleada completa con una sola vida.' },
+  { id: 'perfectRun', name: 'Partida perfecta', desc: 'Llega a la oleada 10 sin perder ninguna vida.' },
+  { id: 'games10', name: 'Veterano I', desc: 'Juega 10 partidas.', stat: 'games', goal: 10 },
+  { id: 'games50', name: 'Veterano II', desc: 'Juega 50 partidas.', stat: 'games', goal: 50 },
+  { id: 'games100', name: 'Veterano III', desc: 'Juega 100 partidas.', stat: 'games', goal: 100 },
+  { id: 'comeback', name: 'Regreso', desc: 'Juega tres días seguidos.', stat: 'days', goal: 3 },
+  { id: 'pacifist', name: 'Pacifista', desc: 'Pasa 30 segundos sin escribir en la oleada 1 y supérala.' },
+  { id: 'grenadier', name: 'Granadero', desc: 'Abate 4 zombis con una sola granada.' },
+  { id: 'looter', name: 'Saqueador', desc: 'Recoge 5 cajas de botín en una partida.' },
+  { id: 'alchemist', name: 'Alquimista', desc: 'Activa una sinergia entre dos mejoras.' },
+  { id: 'devilPact', name: 'Pacto con el diablo', desc: 'Lleva 3 mejoras malditas a la vez.' },
+  { id: 'lazarus', name: 'Lázaro', desc: 'Cae y vuelve gracias a Segunda oportunidad.' },
+  { id: 'giantSlayer', name: 'Matagigantes', desc: 'Derrota a un jefe sin que llegue a golpearte.' },
+  { id: 'nightmare10', name: 'Pesadilla viviente', desc: 'Llega a la oleada 10 en Pesadilla.' },
+  { id: 'collector50', name: 'Coleccionista I', desc: 'Desbloquea la mitad de los logros.', stat: 'collection', goal: 50 },
+  { id: 'collector100', name: 'Coleccionista II', desc: 'Desbloquea todos los logros.', stat: 'collection', goal: 100 },
+];

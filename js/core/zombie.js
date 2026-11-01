@@ -50,6 +50,7 @@ export function createZombie(kind, word, speed) {
     word,
     folded: fold(word),
     typed: 0,
+    keyed: 0, // letras tecleadas por el jugador, no arrancadas
     x: view.spawnX,
     lane: Math.random(),
     speed,

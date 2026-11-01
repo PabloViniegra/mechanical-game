@@ -44,6 +44,9 @@ export class Game {
     this.zombies = [];
     this.effects = new Effects();
     this.target = null;
+    // Palabra que el jugador está terminando a mano, mientras se resuelve su
+    // baja: los logros no cuentan las que acaban rebotes, granadas o alambre.
+    this.typedOut = null;
     this.toSpawn = 0;
     this.waveTotal = 0;
     this.waveDone = 0;
@@ -228,11 +231,16 @@ export class Game {
     // El premio por letra débil exige teclearla, no que la arranque un rebote.
     if (this.weak.includes(c)) z.weakTyped = true;
     z.typed++;
+    z.keyed++;
     this.hits++;
     this.combo++;
     this.maxCombo = Math.max(this.maxCombo, this.combo);
     this.shoot(z);
-    if (this.finished(z)) this.complete(z);
+    if (this.finished(z)) {
+      this.typedOut = { zombie: z, word: z.folded, keyed: z.keyed };
+      this.complete(z);
+      this.typedOut = null;
+    }
     if (this.guided) this.selectGuidedTarget();
     this.emit('change');
   }
@@ -322,6 +330,7 @@ export class Game {
     z.word = z.parts[z.part];
     z.folded = fold(z.word);
     z.typed = 0;
+    z.keyed = 0;
     z.weakTyped = false;
     this.pushBack(z, BOSS.push);
     // Furia lineal: la velocidad base crece `rage` por palabra, no se compone.
@@ -431,6 +440,7 @@ export class Game {
     if (this.over || this.offer || this.grenade < 1) return false;
     this.grenade = 0;
     this.shake = 0.4;
+    const before = this.kills;
     const letters = GRENADE.letters + this.perk('napalm');
     for (const z of this.hostiles) {
       if (z.dead) continue; // abatido en cadena por un rebote
@@ -438,7 +448,7 @@ export class Game {
       this.pushBack(z, GRENADE.push);
       this.chip(z, letters);
     }
-    this.emit('grenade');
+    this.emit('grenade', this.kills - before);
     if (this.guided) this.selectGuidedTarget();
     this.emit('change');
     return true;
@@ -448,6 +458,7 @@ export class Game {
     z.word = pickWord(WORDS[z.type.words], this.zombies.filter((o) => o !== z));
     z.folded = fold(z.word);
     z.typed = 0;
+    z.keyed = 0;
     z.weakTyped = false;
     z.shiftT = z.type.shift;
     z.hit = 0.15;
@@ -543,6 +554,7 @@ export class Game {
       this.bonus = this.wave * WAVES.bonus * (this.perfect ? PERFECT.bonus : 1);
       this.score += this.bonus;
       this.offer = this.rollUpgrades(this.perfect);
+      this.emit('clear', this.wave);
       if (this.perfect) this.emit('perfect');
       this.emit('change');
       if (this.offer.length) this.emit('upgrade', this.offer);

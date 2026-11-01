@@ -144,3 +144,32 @@ for (const width of [1440, 390]) {
     await expect(page.locator('#guided-input')).toBeFocused();
   });
 }
+
+test('logros: aviso al desbloquear y pantalla desde el menú', async ({ page }) => {
+  // Jugó ayer y anteayer: al empezar hoy se desbloquea «Regreso».
+  await page.addInitScript(() => {
+    const d = new Date();
+    const today = Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+    globalThis.localStorage.setItem('teclado-zombie-achievements', JSON.stringify({ lastDay: today - 1, days: 2 }));
+  });
+  await page.goto('/');
+  await expect(page.locator('#achievement-count')).toHaveText('0/41');
+
+  await page.keyboard.press('2');
+  await expect(page.locator('#toasts')).toContainText('Regreso');
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Abandonar' }).click();
+  await page.getByRole('button', { name: /Abandonar\?/ }).click();
+
+  await expect(page.locator('#achievement-count')).toHaveText('1/41');
+  await page.keyboard.press('l');
+  const screen = page.getByRole('region', { name: 'Logros' });
+  await expect(screen).toBeVisible();
+  await expect(screen.getByRole('button', { name: 'Volver' })).toBeFocused();
+  await expect(screen.locator('.achievement.unlocked')).toHaveText(/Regreso/);
+  await page.keyboard.press('Escape');
+  await expect(screen).toBeHidden();
+  await expect(page.locator('[data-diff="normal"]')).toBeFocused();
+  // El aviso se retira solo al terminar su animación.
+  await expect(page.locator('.toast')).toHaveCount(0, { timeout: 6000 });
+});

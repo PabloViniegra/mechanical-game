@@ -13,15 +13,17 @@ import { bootTitle } from './platform/boot.js';
 import { sfx, music, menuMusic, setAudio, onAudioUnlock } from './platform/audio.js';
 import {
   loadRecord, saveRecord, clearRecord, loadSettings, saveSettings, loadProgress, saveProgress,
+  loadAchievements, saveAchievements,
 } from './platform/storage.js';
 import { sanitizeSettings } from './core/settings.js';
 import { EMPTY_PROGRESS, recordProgress, weakKeys } from './core/progress.js';
+import { AchievementTracker, dayNumber, sanitizeProfile } from './core/achievements.js';
 
 // Raíz de composición: une lógica, render y navegador, y gestiona los estados.
 const renderer = new Renderer(document.getElementById('canvas'));
 renderer.resize();
 
-let state = 'menu'; // menu | playing | paused | upgrade | over | options | practice
+let state = 'menu'; // menu | playing | paused | upgrade | over | options | practice | achievements
 let optionsFrom = 'menu'; // estado al que vuelve la pantalla de opciones
 let pausedFrom = 'playing';
 let game = null;
@@ -29,6 +31,10 @@ let settings = loadSettings();
 let diffKey = settings.difficulty;
 let record = loadRecord();
 let progress = loadProgress();
+let achievements = loadAchievements();
+// Solo existe durante una partida arcade: el modo guiado no da logros.
+let tracker = null;
+let savePending = false;
 let previousProgress = progress;
 let lastRecord = false;
 let hudTimer = 0;
@@ -69,6 +75,8 @@ const ui = createUI({
     ui.showPractice(game);
   },
   closePractice,
+  openAchievements,
+  closeAchievements,
   setOption,
   previewSfx: () => {
     sfx.ensure();
@@ -77,11 +85,17 @@ const ui = createUI({
   resetRecord: () => {
     record = 0;
     progress = EMPTY_PROGRESS;
+    achievements = sanitizeProfile(null);
+    // Desde la pausa, la partida en curso ya cumple condiciones (oleada, tiempo)
+    // y las volvería a desbloquear: deja de contar para logros.
+    tracker = null;
     clearRecord();
     ui.setRecord(record, progress);
+    ui.setAchievements(achievements);
   },
 });
 ui.setRecord(record, progress);
+ui.setAchievements(achievements);
 ui.setPixelSize(view.scale);
 applySettings();
 ui.showScreen('start');
@@ -119,8 +133,28 @@ function closePractice() {
   ui.showGameOver(game, lastRecord, previousProgress, progress);
 }
 
+function openAchievements() {
+  if (state !== 'menu') return;
+  state = 'achievements';
+  ui.showAchievements(achievements);
+}
+
+function closeAchievements() {
+  if (state !== 'achievements') return;
+  state = 'menu';
+  ui.showScreen('start');
+}
+
+// Guarda lo que lleva la partida: se llama al desbloquear, al perder y al abandonar.
+function saveTracker() {
+  if (!tracker) return;
+  achievements = tracker.profile;
+  saveAchievements(achievements);
+  ui.setAchievements(achievements);
+}
+
 function inMenu() {
-  return state === 'menu' || (state === 'options' && optionsFrom === 'menu');
+  return state === 'menu' || state === 'achievements' || (state === 'options' && optionsFrom === 'menu');
 }
 
 onAudioUnlock(() => {
@@ -136,7 +170,7 @@ function startGame(key) {
   ui.setHudVisible(true);
   const seen = new Set();
   let synergy = null;
-  game = new Game(key, {
+  const events = {
     ...sounds,
     // Presenta cada especial la primera vez que sale para que se aprenda su color.
     spawn: (z) => {
@@ -178,7 +212,32 @@ function startGame(key) {
       sfx.wave();
     },
     over: endGame,
-  }, { guided: settings.guided, weak: weakKeys(progress) });
+  };
+  // El rastreador ve cada evento antes que la interfaz (al perder, endGame ya
+  // encuentra la partida contada) y recibe también los eventos nuevos sin
+  // tener que registrarlos.
+  const observed = new Proxy(events, {
+    get: (target, name) => (data, g) => {
+      tracker?.handle(name, data);
+      target[name]?.(data, g);
+    },
+  });
+  game = new Game(key, observed, { guided: settings.guided, weak: weakKeys(progress) });
+  tracker = game.guided ? null : new AchievementTracker(achievements, game, {
+    day: dayNumber(new Date()),
+    onUnlock: (achievement) => {
+      ui.toast(achievement);
+      sfx.achievement();
+      // Diferido: «Regreso» se desbloquea dentro del constructor, antes de que
+      // exista `tracker`; y una cascada (Coleccionista) se guarda una sola vez.
+      if (savePending) return;
+      savePending = true;
+      queueMicrotask(() => {
+        savePending = false;
+        saveTracker();
+      });
+    },
+  });
   state = 'playing';
   ui.setGuided(game.guided);
   ui.showScreen(null);
@@ -211,6 +270,8 @@ function resume() {
 
 function endGame(_, g) {
   state = 'over';
+  saveTracker();
+  tracker = null;
   music.stop();
   sfx.gameOver();
   const isRecord = !g.guided && g.score > record;
@@ -231,6 +292,8 @@ function endGame(_, g) {
 
 function toMenu() {
   state = 'menu';
+  saveTracker();
+  tracker = null;
   game = null;
   renderer.setMap(0);
   music.stop();
@@ -256,14 +319,19 @@ bindKeyboard({
     else if (s === 'over') toMenu();
     else if (s === 'options') closeOptions();
     else if (s === 'practice') closePractice();
+    else if (s === 'achievements') closeAchievements();
   },
   onOptions: openOptions,
+  onAchievements: openAchievements,
   onDigit: (s, i) => {
     if (s === 'menu') {
       if (DIFFICULTY_ORDER[i]) startGame(DIFFICULTY_ORDER[i]);
     } else if (game.offer?.[i]) chooseUpgrade(game.offer[i]);
   },
 });
+
+// Cerrar la pestaña en plena partida no pasa por endGame ni toMenu.
+window.addEventListener('pagehide', saveTracker);
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && state === 'playing') pause();
@@ -284,7 +352,10 @@ function frame(now) {
 
   // Las opciones abiertas desde la pausa también congelan la partida.
   if (!game) updateDemo(demo, dt, { still: renderer.reducedMotion });
-  else if (state !== 'paused' && state !== 'options') game.update(dt);
+  else if (state !== 'paused' && state !== 'options') {
+    game.update(dt);
+    if (state === 'playing') tracker?.update();
+  }
 
   const tense = state === 'playing' && game.lives === 1;
   music.setTension(tense);

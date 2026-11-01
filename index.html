@@ -117,9 +117,14 @@
             <span class="item-key" aria-hidden="true">O</span>
             <span class="item-name">Opciones</span>
           </button>
+          <button type="button" class="item" id="open-achievements">
+            <span class="item-key" aria-hidden="true">L</span>
+            <span class="item-name">Logros</span>
+            <span class="item-meta" id="achievement-count"></span>
+          </button>
         </div>
 
-        <p class="hint hint-keys"><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd> · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> · <kbd>O</kbd> Opciones</p>
+        <p class="hint hint-keys"><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd> · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> · <kbd>O</kbd> Opciones · <kbd>L</kbd> Logros</p>
         <p class="hint hidden" id="mode-description">Modo guiado activado. Elige una dificultad para empezar.</p>
         <p class="record title-record"><span>Récord <strong id="record">000000</strong></span><span id="best-wpm-wrap" class="hidden">Máx. <strong id="best-wpm">0</strong> PPM</span></p>
       </div>
@@ -186,7 +191,7 @@
           <button type="button" class="option toggle" data-option="guided" aria-pressed="false" aria-describedby="guided-option-help">
             <span>Modo guiado en la próxima partida</span><span class="option-value" aria-hidden="true"></span>
           </button>
-          <p id="guided-option-help" class="option-help">Objetivos en texto para lectores de pantalla, sin límite de tiempo. Cada tres fallos pierdes una vida. Sin récords arcade.</p>
+          <p id="guided-option-help" class="option-help">Objetivos en texto para lectores de pantalla, sin límite de tiempo. Cada tres fallos pierdes una vida. Sin récords arcade ni logros.</p>
         </div>
 
         <h3 class="section-title">Pantalla</h3>
@@ -207,6 +212,18 @@
       </div>
     </section>
 
+    <section id="screen-achievements" class="overlay hidden" aria-labelledby="achievements-title">
+      <div class="panel">
+        <h2 id="achievements-title" class="screen-title">Logros</h2>
+        <p id="achievements-summary" class="record"></p>
+        <div class="menu" data-menu>
+          <button type="button" class="item" id="achievements-back" data-autofocus><span class="item-name">Volver</span></button>
+        </div>
+        <p class="hint"><kbd>Esc</kbd> para volver · No cuentan en el modo guiado</p>
+        <ul id="achievement-list" class="achievement-list"></ul>
+      </div>
+    </section>
+
     <section id="screen-upgrade" class="overlay hidden" aria-labelledby="upgrade-title">
       <div class="panel">
         <h2 id="upgrade-title" class="screen-title">Oleada superada</h2>
@@ -214,7 +231,10 @@
         <h3 class="section-title">Elige una mejora</h3>
         <div id="upgrade-choices" class="menu" role="group" aria-label="Mejoras" data-menu></div>
         <p class="hint">Elige con flechas y <kbd>Enter</kbd>, o pulsa un número · <kbd>Esc</kbd> pausa</p>
-        <div class="menu"><button type="button" class="item" id="upgrade-pause"><span class="item-name">Pausa y ayuda</span></button></div>
+        <div class="menu">
+          <button type="button" class="item" id="upgrade-skip"><span class="item-name">Seguir sin mejora</span></button>
+          <button type="button" class="item" id="upgrade-pause"><span class="item-name">Pausa y ayuda</span></button>
+        </div>
       </div>
     </section>
 
@@ -269,6 +289,7 @@
         <div class="menu"><button type="button" class="item" id="practice-back">Volver al resumen</button></div>
       </div>
     </section>
+    <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
   </main>
   <dialog id="keyboard-dialog" class="panel keyboard-dialog" aria-labelledby="keyboard-title" aria-describedby="keyboard-description">
     <h2 id="keyboard-title" class="screen-title" tabindex="-1" autofocus>Necesitas un teclado</h2>

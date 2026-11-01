@@ -1,4 +1,6 @@
-import { UPGRADES, RARITY, WORDS, ZOMBIE_TYPES, GUIDED, SYNERGIES, DIFFICULTY } from '../data/config.js';
+import {
+  UPGRADES, RARITY, WORDS, ZOMBIE_TYPES, GUIDED, SYNERGIES, DIFFICULTY, ACHIEVEMENTS,
+} from '../data/config.js';
 import { fold } from '../core/utils.js';
 import { practiceFeedback } from '../core/practice.js';
 import { trainingReport, weakKeys } from '../core/progress.js';
@@ -94,6 +96,7 @@ export function createUI(actions) {
       options: $('#screen-options'),
       over: $('#screen-over'),
       practice: $('#screen-practice'),
+      achievements: $('#screen-achievements'),
     },
     upgradeBonus: $('#upgrade-bonus'),
     upgradeChoices: $('#upgrade-choices'),
@@ -129,6 +132,9 @@ export function createUI(actions) {
   });
   quit.addEventListener('blur', disarmQuit);
   $('#upgrade-pause').addEventListener('click', actions.pause);
+  $('#upgrade-skip').addEventListener('click', () => actions.upgrade(null));
+  $('#open-achievements').addEventListener('click', actions.openAchievements);
+  $('#achievements-back').addEventListener('click', actions.closeAchievements);
   $('#guided-pause').addEventListener('click', actions.pause);
   $('#guided-grenade').addEventListener('click', actions.grenade);
   const guidedInput = $('#guided-input');
@@ -186,7 +192,7 @@ export function createUI(actions) {
       ? 'Pulsa otra vez para borrarlo. Cualquier otra tecla cancela.'
       : el.resetRecord.disabled
         ? 'No hay nada que borrar.'
-        : 'Se borran el récord, el PPM máx. y las últimas partidas.';
+        : 'Se borran el récord, el PPM máx., las últimas partidas y los logros.';
   };
   const disarmReset = () => {
     resetArmed = false;
@@ -436,6 +442,36 @@ export function createUI(actions) {
       el.bestWpmWrap.classList.toggle('hidden', !progress.games);
       el.resetRecord.disabled = value === 0 && !progress.games;
       describeReset();
+    },
+
+    setAchievements(profile) {
+      $('#achievement-count').textContent = `${profile.unlocked.length}/${ACHIEVEMENTS.length}`;
+    },
+
+    showAchievements(profile) {
+      const { unlocked } = profile;
+      $('#achievements-summary').textContent = `${unlocked.length} de ${ACHIEVEMENTS.length} desbloqueados`;
+      $('#achievement-list').replaceChildren(...ACHIEVEMENTS.map((a) => {
+        const done = unlocked.includes(a.id);
+        const li = document.createElement('li');
+        li.className = done ? 'achievement unlocked' : 'achievement';
+        li.append(
+          span('achievement-name', a.name),
+          span('achievement-state', done ? 'Desbloqueado' : 'Bloqueado'),
+          span('achievement-desc', a.desc),
+        );
+        return li;
+      }));
+      this.showScreen('achievements');
+    },
+
+    toast(achievement) {
+      const item = document.createElement('div');
+      item.className = 'toast';
+      item.append(span('toast-title', 'Logro desbloqueado'), span('toast-name', achievement.name));
+      // Se retira al acabar su animación de style.css.
+      item.addEventListener('animationend', () => item.remove(), { once: true });
+      $('#toasts').append(item);
     },
 
     setOptions(settings) {

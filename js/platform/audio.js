@@ -90,6 +90,11 @@ export const sfx = {
     tone(784, 0.1, 'square', 0.07, 0, 0.2);
     tone(1047, 0.3, 'square', 0.07, 0, 0.3);
   },
+  // Más suave que `perfect`: avisa sin tapar la partida.
+  achievement() {
+    tone(784, 0.07, 'triangle', 0.06);
+    tone(1175, 0.16, 'triangle', 0.06, 0, 0.08);
+  },
   heartbeat() {
     tone(62, 0.12, 'sine', 0.3, -20);
     tone(55, 0.16, 'sine', 0.24, -20, 0.16);
