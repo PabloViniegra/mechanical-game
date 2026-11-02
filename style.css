@@ -148,6 +148,8 @@ kbd {
   height: calc(var(--u) * 3);
   padding: calc(var(--u) * 0.5);
   background: var(--night);
+  /* Visible aunque esté vacía. */
+  box-shadow: inset 0 0 0 calc(var(--u) * 0.5) var(--slate);
 }
 
 .meter-fill {
@@ -170,7 +172,7 @@ kbd {
 .mult {
   font-family: var(--pixel);
   font-size: var(--fs-m);
-  color: var(--dust);
+  color: var(--bone);
 }
 
 .mult.hot { color: var(--ember); }
@@ -650,6 +652,7 @@ kbd {
 
 .summary-hero dd { font-size: var(--fs-l); }
 .summary-hero { margin-bottom: calc(var(--u) * 2); }
+.summary-run { grid-template-columns: repeat(3, 1fr); gap: var(--u) calc(var(--u) * 4); }
 
 .summary dd {
   margin: 0;

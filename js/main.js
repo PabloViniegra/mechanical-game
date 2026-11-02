@@ -192,6 +192,8 @@ function startGame(key) {
         if (progress.games === 0 && !g.guided) sub = 'La primera letra fija el objetivo. Acaba su palabra';
         else sub = g.weak.length ? `Entrenas: ${g.weak.map(keyName).join(', ')}` : 'Escribe para disparar';
       }
+      else if (progress.games === 0 && !g.guided && wave === 2) sub = 'Tab para cambiar el objetivo. Enter lanza la granada cargada';
+      else if (progress.games === 0 && !g.guided && wave === 3) sub = 'Las tildes son opcionales; la ñ cuenta';
       else if (boss) sub = 'Se acerca una abominación';
       else if (bonus) sub = `Superada con +${bonus}. ${total} zombis`;
       if (changed) sub = `${MAPS[renderer.map].name}. ${sub}`;

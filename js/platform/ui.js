@@ -29,9 +29,12 @@ function progressText(wpm, prev) {
   return `Mejor velocidad reciente: ${prev.bestWpm} PPM · ${vs}.`;
 }
 
+const MIN_HITS_PRAISE = 20;
+
 // Convierte el fallo más repetido en algo que practicar la próxima vez.
 function adviceText(game) {
-  if (game.hits && !game.misses) return 'Ni un fallo. Los zombis no se lo explican.';
+  // Con muy pocas pulsaciones «ni un fallo» suena a burla, no a elogio.
+  if (game.hits >= MIN_HITS_PRAISE && !game.misses) return 'Ni un fallo. Los zombis no se lo explican.';
   const worst = game.worstKey;
   if (!worst) return '';
   const space = worst.key === ' ';
