@@ -49,6 +49,18 @@ test('menú, partida arcade, pausa y regreso con teclado', async ({ page }) => {
   await expect(page.locator('#hud')).toBeHidden();
 });
 
+test('Tab en partida no mueve el foco del navegador', async ({ page }) => {
+  await page.goto('/');
+  await page.keyboard.press('2');
+  await expect(page.locator('#screen-start')).toBeHidden();
+
+  for (const key of ['Tab', 'Shift+Tab']) {
+    await page.keyboard.press(key);
+    await expect(page.locator('body')).toBeFocused();
+    expect(await page.evaluate(() => globalThis.scrollY)).toBe(0);
+  }
+});
+
 test('modo guiado: disparo, game over y reintento', async ({ page }) => {
   await page.goto('/');
   await page.keyboard.press('o');

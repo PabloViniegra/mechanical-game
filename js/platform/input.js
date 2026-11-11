@@ -45,10 +45,11 @@ export function bindKeyboard({ getState, onChar, onEscape, onDigit, onGrenade, o
       onGrenade();
       return;
     }
-    // Tab solo se queda la tecla si había objetivo que soltar: sin él, y en
-    // el modo guiado, sigue moviendo el foco para poder volver a los controles.
-    if (e.key === 'Tab' && !e.shiftKey && plain) {
-      if (onRelease()) e.preventDefault();
+    // En partida Tab nunca mueve el foco del navegador (provocaba saltos y
+    // scroll); los controles siguen accesibles con Esc, que pausa.
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (!e.shiftKey && plain) onRelease();
       return;
     }
     // 'Dead' (tecla muerta de tildes) y otras teclas especiales tienen nombres largos.
